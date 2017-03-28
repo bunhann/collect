@@ -15,7 +15,6 @@
   <string name="cancel">Vazgeç</string>
   <string name="cancel_loading_form">Vazgeç</string>
   <string name="cancel_location">Vazgeç</string>
-  <string name="cannot_edit_completed_form">Bu form bitmiş olarak işaretlendiği için değiştirilemez. Şifrelenmiştir</string>
   <string name="capture_audio">Ses Kaydi</string>
   <string name="capture_image">Resim Çek</string>
   <string name="capture_video">Video Kayit</string>
@@ -65,7 +64,7 @@
   <string name="leave_repeat_yes">Ekleme</string>
   <string name="loading_form">Form Yükleniyor</string>
   <string name="main_menu">Ana Menu</string>
-  <string name="main_menu_details">Daha Kolay veri toplama...</string>
+  <string name="main_menu_details">Daha Kolay veri toplama…</string>
   <string name="manage_files">Kayitli Formu Sil</string>
   <string name="mark_finished">Bitirilen Formu işaretle</string>
   <string name="noselect_error">Herhangi bir form seçilmedi !</string>
@@ -181,4 +180,9 @@
   <string name="open_url">URL Aç</string>
   <string name="default_google_sheets_url"></string>
   <!--Geo string added in feature-geofeatures branch-->
+  <!--&lt; and &gt; surrounds the text so it will appear as <no form loaded>-->
+  <!--%1$s represents degrees, %2$s represents minutes and %3$s represents seconds as in W 18°48'8"-->
+  <!--%1$s represents degrees, %2$s represents minutes and %3$s represents seconds as in E 18°48'8"-->
+  <!--%1$s represents degrees, %2$s represents minutes and %3$s represents seconds as in S 18°48'8"-->
+  <!--%1$s represents degrees, %2$s represents minutes and %3$s represents seconds as in N 18°48'8"-->
 </resources>
