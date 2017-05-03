@@ -12,6 +12,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import timber.log.Timber;
+
 /**
  * Created by Jon Nordling on 2/21/17.
  * The purpose of this class is to handle the XML parsing
@@ -48,13 +50,13 @@ public class ResponseMessageParser {
     public String parseXMLMessage() {
         String message = null;
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder dBuilder;
+        DocumentBuilder builder;
         try {
-            dBuilder = dbFactory.newDocumentBuilder();
+            builder = dbFactory.newDocumentBuilder();
             Document doc = null;
             try {
                 String httpEntityString = EntityUtils.toString(httpEntity);
-                doc = dBuilder.parse(new ByteArrayInputStream(httpEntityString.getBytes()));
+                doc = builder.parse(new ByteArrayInputStream(httpEntityString.getBytes()));
                 doc.getDocumentElement().normalize();
 
                 if (doc.getElementsByTagName(MESSAGE_XML_TAG).item(0) != null) {
@@ -64,15 +66,15 @@ public class ResponseMessageParser {
                 }
                 return message;
 
-            } catch (SAXException e) {
-                isValid = false;
-            } catch (IOException e) {
+            } catch (SAXException | IOException e) {
+                Timber.e(e, "Error parsing XML message due to %s ", e.getMessage());
                 isValid = false;
             }
 
             return message;
 
         } catch (ParserConfigurationException e) {
+            Timber.e(e, "Error parsing XML message due to %s ", e.getMessage());
             isValid = false;
         }
 

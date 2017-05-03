@@ -17,8 +17,6 @@ import android.support.v4.app.NotificationCompat;
 
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
-import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpTransport;
@@ -31,6 +29,7 @@ import org.odk.collect.android.R;
 import org.odk.collect.android.activities.NotificationActivity;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.dao.InstancesDao;
+import org.odk.collect.android.exception.MultipleFoldersFoundException;
 import org.odk.collect.android.listeners.InstanceUploaderListener;
 import org.odk.collect.android.preferences.PreferenceKeys;
 import org.odk.collect.android.provider.InstanceProviderAPI.InstanceColumns;
@@ -44,6 +43,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+
+import timber.log.Timber;
 
 public class NetworkReceiver extends BroadcastReceiver implements InstanceUploaderListener {
 
@@ -133,9 +134,9 @@ public class NetworkReceiver extends BroadcastReceiver implements InstanceUpload
             toUpload.toArray(toSendArray);
 
 
-            GoogleAccountCredential mCredential;
+            GoogleAccountCredential accountCredential;
             // Initialize credentials and service object.
-            mCredential = GoogleAccountCredential.usingOAuth2(
+            accountCredential = GoogleAccountCredential.usingOAuth2(
                     Collect.getInstance(), Collections.singleton(DriveScopes.DRIVE))
                     .setBackOff(new ExponentialBackOff());
 
@@ -145,7 +146,7 @@ public class NetworkReceiver extends BroadcastReceiver implements InstanceUpload
                     context.getString(R.string.protocol_odk_default));
 
             if (protocol.equals(context.getString(R.string.protocol_google_sheets))) {
-                mGoogleSheetsUploadTask = new GoogleSheetsAutoUploadTask(context, mCredential);
+                mGoogleSheetsUploadTask = new GoogleSheetsAutoUploadTask(context, accountCredential);
                 String googleUsername = settings.getString(
                         PreferenceKeys.KEY_SELECTED_GOOGLE_ACCOUNT, null);
                 if (googleUsername == null || googleUsername.equalsIgnoreCase("")) {
@@ -153,7 +154,7 @@ public class NetworkReceiver extends BroadcastReceiver implements InstanceUpload
                     running = false;
                     return;
                 }
-                mCredential.setSelectedAccountName(googleUsername);
+                accountCredential.setSelectedAccountName(googleUsername);
                 mGoogleSheetsUploadTask.setUploaderListener(this);
                 mGoogleSheetsUploadTask.execute(toSendArray);
 
@@ -241,7 +242,7 @@ public class NetworkReceiver extends BroadcastReceiver implements InstanceUpload
         PendingIntent pendingNotify = PendingIntent.getActivity(Collect.getInstance(), 0,
                 notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(Collect.getInstance())
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(Collect.getInstance())
                 .setSmallIcon(R.drawable.notes)
                 .setContentTitle(Collect.getInstance().getString(R.string.odk_auto_note))
                 .setContentIntent(pendingNotify)
@@ -251,9 +252,9 @@ public class NetworkReceiver extends BroadcastReceiver implements InstanceUpload
                         BitmapFactory.decodeResource(Collect.getInstance().getResources(),
                                 android.R.drawable.ic_dialog_info));
 
-        NotificationManager mNotificationManager = (NotificationManager) Collect.getInstance()
+        NotificationManager notificationManager = (NotificationManager) Collect.getInstance()
                 .getSystemService(Context.NOTIFICATION_SERVICE);
-        mNotificationManager.notify(1328974928, mBuilder.build());
+        notificationManager.notify(1328974928, builder.build());
     }
 
 
@@ -320,21 +321,8 @@ public class NetworkReceiver extends BroadcastReceiver implements InstanceUpload
                 getIDOfFolderWithName(GOOGLE_DRIVE_ROOT_FOLDER, null);
 
 
-            } catch (IOException e) {
-                // network or server error, the call is expected to succeed if
-                // you try again later. Don't attempt to call again immediately
-                // - the request is likely to fail, you'll hit quotas or
-                // back-off.
-                return null;
-            } catch (GooglePlayServicesAvailabilityException playEx) {
-                return null;
-            } catch (UserRecoverableAuthException e) {
-                return null;
-            } catch (GoogleAuthException e) {
-                // Failure. The call is not expected to ever succeed so it
-                // should not be retried.
-                return null;
-            } catch (MultipleFoldersFoundException e) {
+            } catch (IOException | GoogleAuthException | MultipleFoldersFoundException e) {
+                Timber.e(e);
                 return null;
             }
             mContext = null;

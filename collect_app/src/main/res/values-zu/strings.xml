@@ -21,7 +21,6 @@
   <string name="capture_video">Thwebula ividiyo</string>
   <string name="change_language">shintsha ulimi</string>
   <string name="change_password">Inombolomfihlo ye ODK</string>
-  <string name="change_protocol_settings_default">Ukuhlelwa kwenkundla</string>
   <string name="change_username">igamamfihlo le ODK</string>
   <string name="clearanswer_confirm">Susa impendulo yoku \"%s\"?</string>
   <string name="clear_answer">Susa Impendulo</string>
@@ -153,7 +152,6 @@
   <string name="success">Impumelelo</string>
   <string name="no_forms_uploaded">Siyaxolisa, akukho fomu alayishiwe .</string>
   <string name="upload_results">Layisha imiphumela</string>
-  <string name="xform_parse_error">XForm Ukuhlaziya Iphutha . %1$s entulekayo element %2$s</string>
   <string name="choose_sound">Khetha umsindo</string>
   <string name="choose_video">Khetha ummboniso</string>
   <string name="choose_image">Khetha isithombe</string>
@@ -201,7 +199,6 @@
   <string name="admin_preferences">Izinhlelo zokusingathwa komsebenzi</string>
   <string name="admin_access_settings">Thinta ukufinyelela ezinhlelweni zokusingathwa komsebenzi</string>
   <string name="user_access_form_entry">Umsebenzisi angafinyelela ukugcwalisa kwefomu:</string>
-  <string name="admin_advanced_settings">Izilungiselelo ezithuthukisiwe (uma welulekiwe):</string>
   <string name="save_mid">Gcina iFomu</string>
   <string name="enter_new_password">Faka inombolomfihlo entsha</string>
   <string name="verify_new_password">Phinda ufake inombolomfihlo entsha</string>
@@ -230,12 +227,6 @@
   <string name="swipe_instructions">Usekuqaleni kwe %s. Swipe the screen njengoba kukhonjisiwe ngezansi ukuya emumva naphambili</string>
   <string name="buttons_instructions">Usekuqaleni kwe %s. Thinta umcbisholo ongezansi ukuya emumva naphambili</string>
   <string name="swipe_buttons_instructions">Usekuqaleni kwe %s. Swipe the screen njengoba kukhonjisiwe ngezansi noma uthinte umcibisholo ukuya emumva naphambili</string>
-  <string name="form_processing_logic">Ukudluiswa bngokulandelana kwefomu</string>
-  <string name="form_processing_logic_recommended">Okunconyiwe ngokungenhloso</string>
-  <string name="form_processing_logic_0">January 2015 (okushesha kakhulu)</string>
-  <string name="form_processing_logic_1">January 2015 (okuphephileyo)</string>
-  <string name="form_processing_logic_2">Mid 2104 (okuhamba kancane)</string>
-  <string name="form_processing_logic_3">Early 2014 (okusheshayo)</string>
   <string name="launch_printer">Qala ukhiqize emshinini (printer)</string>
   <string name="no_printer">Umshini wokukhiqisa oceliwe awuxhunyiwe. Sicela uxhume umshini</string>
   <string name="view_change_location">Bheka noma ushintshe isizinda/indawo</string>

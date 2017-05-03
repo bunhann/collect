@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.odk.collect.android.utilities;
 
 import android.content.Context;
@@ -24,7 +25,7 @@ import org.odk.collect.android.dao.FormsDao;
 import org.odk.collect.android.dao.InstancesDao;
 import org.odk.collect.android.database.ItemsetDbAdapter;
 import org.odk.collect.android.preferences.AdminPreferencesActivity;
-import org.osmdroid.tileprovider.constants.OpenStreetMapTileProviderConstants;
+import org.osmdroid.config.Configuration;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ public class ResetUtility {
                     }
                     break;
                 case ResetAction.RESET_OSM_DROID:
-                    if (deleteFolderContents(OpenStreetMapTileProviderConstants.TILE_PATH_BASE.getPath())) {
+                    if (deleteFolderContents(Configuration.getInstance().getOsmdroidTileCache().getPath())) {
                         mFailedResetActions.remove(mFailedResetActions.indexOf(ResetAction.RESET_OSM_DROID));
                     }
                     break;
@@ -86,11 +87,11 @@ public class ResetUtility {
                 .clear()
                 .commit();
 
-        boolean deletedSettingsFolderContest = !new File(Collect.SETTINGS).exists() ||
-                deleteFolderContents(Collect.SETTINGS);
+        boolean deletedSettingsFolderContest = !new File(Collect.SETTINGS).exists()
+                || deleteFolderContents(Collect.SETTINGS);
 
-        boolean deletedSettingsFile = !new File(Collect.ODK_ROOT + "/collect.settings").exists() ||
-                (new File(Collect.ODK_ROOT + "/collect.settings").delete());
+        boolean deletedSettingsFile = !new File(Collect.ODK_ROOT + "/collect.settings").exists()
+                || (new File(Collect.ODK_ROOT + "/collect.settings").delete());
 
         if (clearedDefaultPreferences && clearedAdminPreferences && deletedSettingsFolderContest && deletedSettingsFile) {
             mFailedResetActions.remove(mFailedResetActions.indexOf(ResetAction.RESET_PREFERENCES));

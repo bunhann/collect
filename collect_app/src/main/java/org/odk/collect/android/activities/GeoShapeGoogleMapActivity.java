@@ -18,7 +18,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
@@ -38,7 +37,6 @@ import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -154,9 +152,9 @@ public class GeoShapeGoogleMapActivity extends FragmentActivity implements Locat
         gps_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-        // if(curLocation !=null){
-        //    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(curlatLng,16));
-        // }
+                // if(curLocation !=null){
+                //    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(curlatLng,16));
+                // }
                 showZoomDialog();
             }
         });
@@ -287,15 +285,15 @@ public class GeoShapeGoogleMapActivity extends FragmentActivity implements Locat
         String[] sa = s.split(";");
         for (int i = 0; i < (sa.length - 1); i++) {
             String[] sp = sa[i].split(" ");
-            double gp[] = new double[4];
+            double[] gp = new double[4];
             String lat = sp[0].replace(" ", "");
             String lng = sp[1].replace(" ", "");
             gp[0] = Double.parseDouble(lat);
             gp[1] = Double.parseDouble(lng);
             LatLng point = new LatLng(gp[0], gp[1]);
             polygonOptions.add(point);
-            MarkerOptions mMarkerOptions = new MarkerOptions().position(point).draggable(true);
-            Marker marker = mMap.addMarker(mMarkerOptions);
+            MarkerOptions markerOptions = new MarkerOptions().position(point).draggable(true);
+            Marker marker = mMap.addMarker(markerOptions);
             markerArray.add(marker);
         }
         polygon = mMap.addPolygon(polygonOptions);
@@ -304,19 +302,19 @@ public class GeoShapeGoogleMapActivity extends FragmentActivity implements Locat
     }
 
     private String generateReturnString() {
-        String temp_string = "";
+        String tempString = "";
         //Add the first marker to the end of the array, so the first and the last are the same
-        if (markerArray.size() > 1 ){
+        if (markerArray.size() > 1) {
             markerArray.add(markerArray.get(0));
-            for (int i = 0 ; i < markerArray.size(); i++){
+            for (int i = 0; i < markerArray.size(); i++) {
                 String lat = Double.toString(markerArray.get(i).getPosition().latitude);
                 String lng = Double.toString(markerArray.get(i).getPosition().longitude);
                 String alt = "0.0";
                 String acu = "0.0";
-                temp_string = temp_string + lat + " " + lng + " " + alt + " " + acu + ";";
+                tempString = tempString + lat + " " + lng + " " + alt + " " + acu + ";";
             }
         }
-        return temp_string;
+        return tempString;
     }
 
     @Override
@@ -360,8 +358,8 @@ public class GeoShapeGoogleMapActivity extends FragmentActivity implements Locat
 
     @Override
     public void onMapLongClick(LatLng latLng) {
-        MarkerOptions mMarkerOptions = new MarkerOptions().position(latLng).draggable(true);
-        Marker marker = mMap.addMarker(mMarkerOptions);
+        MarkerOptions markerOptions = new MarkerOptions().position(latLng).draggable(true);
+        Marker marker = mMap.addMarker(markerOptions);
         markerArray.add(marker);
 
         if (polygon == null) {
@@ -437,9 +435,9 @@ public class GeoShapeGoogleMapActivity extends FragmentActivity implements Locat
 
     public void showZoomDialog() {
         if (zoomDialog == null) {
-            AlertDialog.Builder p_builder = new AlertDialog.Builder(this);
-            p_builder.setTitle(getString(R.string.zoom_to_where));
-            p_builder.setView(zoomDialogView)
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(getString(R.string.zoom_to_where));
+            builder.setView(zoomDialogView)
                     .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             dialog.cancel();
@@ -452,7 +450,7 @@ public class GeoShapeGoogleMapActivity extends FragmentActivity implements Locat
                             zoomDialog.dismiss();
                         }
                     });
-            zoomDialog = p_builder.create();
+            zoomDialog = builder.create();
         }
 
         if (curLocation != null) {

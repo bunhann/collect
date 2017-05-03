@@ -20,7 +20,6 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -39,13 +38,14 @@ import org.odk.collect.android.exception.JavaRosaException;
 import org.odk.collect.android.logic.FormController;
 import org.odk.collect.android.logic.HierarchyElement;
 import org.odk.collect.android.utilities.ApplicationConstants;
+import org.odk.collect.android.utilities.FormEntryPromptUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FormHierarchyActivity extends ListActivity {
+import timber.log.Timber;
 
-    private static final String t = "FormHierarchyActivity";
+public class FormHierarchyActivity extends ListActivity {
 
     private static final int CHILD = 1;
     private static final int EXPANDED = 2;
@@ -308,9 +308,9 @@ public class FormHierarchyActivity extends ListActivity {
                         if (!fp.isReadOnly() || (label != null && label.length() > 0)) {
                             // show the question if it is an editable field.
                             // or if it is read-only and the label is not blank.
-                            String answerDisplay = fp.getAnswerText();
+                            String answerDisplay = FormEntryPromptUtils.getAnswerText(fp);
                             formList.add(
-                                    new HierarchyElement(fp.getLongText(), fp.getAnswerText(), null,
+                                    new HierarchyElement(fp.getLongText(), answerDisplay, null,
                                             Color.WHITE, QUESTION, fp.getIndex()));
                         }
                         break;
@@ -361,7 +361,7 @@ public class FormHierarchyActivity extends ListActivity {
             // set the controller back to the current index in case the user hits 'back'
             formController.jumpToIndex(currentIndex);
         } catch (Exception e) {
-            Log.e(t, e.getMessage(), e);
+            Timber.e(e);
             createErrorDialog(e.getMessage());
         }
     }
@@ -423,7 +423,7 @@ public class FormHierarchyActivity extends ListActivity {
                 h.setType(EXPANDED);
                 ArrayList<HierarchyElement> children1 = h.getChildren();
                 for (int i = 0; i < children1.size(); i++) {
-                    Log.i(t, "adding child: " + children1.get(i).getFormIndex());
+                    Timber.i("adding child: %s", children1.get(i).getFormIndex());
                     formList.add(position + 1 + i, children1.get(i));
 
                 }
@@ -437,7 +437,7 @@ public class FormHierarchyActivity extends ListActivity {
                     try {
                         Collect.getInstance().getFormController().stepToPreviousScreenEvent();
                     } catch (JavaRosaException e) {
-                        Log.e(t, e.getMessage(), e);
+                        Timber.e(e);
                         createErrorDialog(e.getCause().getMessage());
                         return;
                     }

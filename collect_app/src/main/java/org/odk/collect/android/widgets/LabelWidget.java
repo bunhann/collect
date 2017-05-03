@@ -16,7 +16,6 @@ package org.odk.collect.android.widgets;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.util.Log;
 import android.util.TypedValue;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
@@ -45,6 +44,8 @@ import org.odk.collect.android.utilities.FileUtils;
 import java.io.File;
 import java.util.List;
 
+import timber.log.Timber;
+
 /**
  * The Label Widget does not return an answer. The purpose of this widget is to be the top entry in
  * a field-list with a bunch of list widgets below. This widget provides the labels, so that the
@@ -54,7 +55,6 @@ import java.util.List;
  * @author Jeff Beorse
  */
 public class LabelWidget extends QuestionWidget {
-    private static final String t = "LabelWidget";
 
     List<SelectChoice> mItems;
     View center;
@@ -64,10 +64,10 @@ public class LabelWidget extends QuestionWidget {
         super(context, prompt);
 
         // SurveyCTO-added support for dynamic select content (from .csv files)
-        XPathFuncExpr xPathFuncExpr = ExternalDataUtil.getSearchXPathExpression(
+        XPathFuncExpr xpathFuncExpr = ExternalDataUtil.getSearchXPathExpression(
                 prompt.getAppearanceHint());
-        if (xPathFuncExpr != null) {
-            mItems = ExternalDataUtil.populateExternalChoices(prompt, xPathFuncExpr);
+        if (xpathFuncExpr != null) {
+            mItems = ExternalDataUtil.populateExternalChoices(prompt, xpathFuncExpr);
         } else {
             mItems = prompt.getSelectChoices();
         }
@@ -92,8 +92,8 @@ public class LabelWidget extends QuestionWidget {
                 }
 
                 // build image view (if an image is provided)
-                ImageView mImageView = null;
-                TextView mMissingImage = null;
+                ImageView imageView = null;
+                TextView missingImage = null;
 
                 final int labelId = QuestionWidget.newUniqueId();
 
@@ -114,15 +114,16 @@ public class LabelWidget extends QuestionWidget {
                                         FileUtils.getBitmapScaledToDisplay(imageFile, screenHeight,
                                                 screenWidth);
                             } catch (OutOfMemoryError e) {
+                                Timber.e(e);
                                 errorMsg = "ERROR: " + e.getMessage();
                             }
 
                             if (b != null) {
-                                mImageView = new ImageView(getContext());
-                                mImageView.setPadding(2, 2, 2, 2);
-                                mImageView.setAdjustViewBounds(true);
-                                mImageView.setImageBitmap(b);
-                                mImageView.setId(labelId);
+                                imageView = new ImageView(getContext());
+                                imageView.setPadding(2, 2, 2, 2);
+                                imageView.setAdjustViewBounds(true);
+                                imageView.setImageBitmap(b);
+                                imageView.setId(labelId);
                             } else if (errorMsg == null) {
                                 // An error hasn't been logged and loading the image failed, so it's
                                 // likely
@@ -139,15 +140,15 @@ public class LabelWidget extends QuestionWidget {
 
                         if (errorMsg != null) {
                             // errorMsg is only set when an error has occured
-                            Log.e(t, errorMsg);
-                            mMissingImage = new TextView(getContext());
-                            mMissingImage.setText(errorMsg);
+                            Timber.e(errorMsg);
+                            missingImage = new TextView(getContext());
+                            missingImage.setText(errorMsg);
 
-                            mMissingImage.setPadding(2, 2, 2, 2);
-                            mMissingImage.setId(labelId);
+                            missingImage.setPadding(2, 2, 2, 2);
+                            missingImage.setId(labelId);
                         }
                     } catch (InvalidReferenceException e) {
-                        Log.e(t, "image invalid reference exception");
+                        Timber.e(e, "Invalid image reference");
                     }
                 } else {
                     // There's no imageURI listed, so just ignore it.
@@ -173,11 +174,11 @@ public class LabelWidget extends QuestionWidget {
                                 LayoutParams.WRAP_CONTENT);
                 buttonParams.gravity = Gravity.CENTER_HORIZONTAL;
 
-                if (mImageView != null) {
-                    mImageView.setScaleType(ScaleType.CENTER);
-                    answer.addView(mImageView, headerParams);
-                } else if (mMissingImage != null) {
-                    answer.addView(mMissingImage, headerParams);
+                if (imageView != null) {
+                    imageView.setScaleType(ScaleType.CENTER);
+                    answer.addView(imageView, headerParams);
+                } else if (missingImage != null) {
+                    answer.addView(missingImage, headerParams);
                 } else {
                     label.setId(labelId);
                     answer.addView(label, headerParams);

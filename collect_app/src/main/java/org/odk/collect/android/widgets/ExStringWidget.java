@@ -21,7 +21,6 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.text.method.TextKeyListener;
 import android.text.method.TextKeyListener.Capitalize;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
@@ -42,6 +41,8 @@ import org.odk.collect.android.exception.ExternalParamsException;
 import org.odk.collect.android.external.ExternalAppsUtils;
 
 import java.util.Map;
+
+import timber.log.Timber;
 
 
 /**
@@ -87,7 +88,6 @@ import java.util.Map;
  */
 public class ExStringWidget extends QuestionWidget implements IBinaryWidget {
 
-    private final String t = getClass().getName();
 
     private boolean mHasExApp = true;
     private Button mLaunchIntentButton;
@@ -161,10 +161,10 @@ public class ExStringWidget extends QuestionWidget implements IBinaryWidget {
                             mPrompt.getIndex());
                     fireActivity(i);
                 } catch (ExternalParamsException e) {
-                    Log.e(t, e.getMessage(), e);
+                    Timber.e(e);
                     onException(e.getMessage());
                 } catch (ActivityNotFoundException e) {
-                    Log.e(t, e.getMessage(), e);
+                    Timber.e(e);
                     onException(errorString);
                 }
             }
@@ -244,16 +244,16 @@ public class ExStringWidget extends QuestionWidget implements IBinaryWidget {
             if (!mPrompt.isReadOnly()) {
                 mAnswer.requestFocus();
                 inputManager.showSoftInput(mAnswer, 0);
-                /*
-	             * If you do a multi-question screen after a "add another group" dialog, this won't
-	             * automatically pop up. It's an Android issue.
-	             *
-	             * That is, if I have an edit text in an activity, and pop a dialog, and in that
-	             * dialog's button's OnClick() I call edittext.requestFocus() and
-	             * showSoftInput(edittext, 0), showSoftinput() returns false. However, if the
-	             * edittext
-	             * is focused before the dialog pops up, everything works fine. great.
-	             */
+            /*
+             * If you do a multi-question screen after a "add another group" dialog, this won't
+             * automatically pop up. It's an Android issue.
+             *
+             * That is, if I have an edit text in an activity, and pop a dialog, and in that
+             * dialog's button's OnClick() I call edittext.requestFocus() and
+             * showSoftInput(edittext, 0), showSoftinput() returns false. However, if the
+             * edittext
+             * is focused before the dialog pops up, everything works fine. great.
+             */
             } else {
                 inputManager.hideSoftInputFromWindow(mAnswer.getWindowToken(), 0);
             }
@@ -274,10 +274,7 @@ public class ExStringWidget extends QuestionWidget implements IBinaryWidget {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (event.isAltPressed() == true) {
-            return false;
-        }
-        return super.onKeyDown(keyCode, event);
+        return !event.isAltPressed() && super.onKeyDown(keyCode, event);
     }
 
     @Override

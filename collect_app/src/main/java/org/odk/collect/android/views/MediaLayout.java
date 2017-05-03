@@ -25,7 +25,6 @@ import android.media.MediaPlayer.OnCompletionListener;
 import android.net.Uri;
 import android.support.v7.widget.AppCompatImageButton;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CheckBox;
@@ -47,6 +46,8 @@ import org.odk.collect.android.widgets.QuestionWidget;
 
 import java.io.File;
 
+import timber.log.Timber;
+
 /**
  * This layout is used anywhere we can have image/audio/video/text. TODO: It would probably be nice
  * to put this in a layout.xml file of some sort at some point.
@@ -54,7 +55,6 @@ import java.io.File;
  * @author carlhartung
  */
 public class MediaLayout extends RelativeLayout implements OnClickListener {
-    private static final String t = "AVTLayout";
 
     private String mSelectionDesignator;
     private FormIndex mIndex;
@@ -125,7 +125,7 @@ public class MediaLayout extends RelativeLayout implements OnClickListener {
                 videoFilename =
                         ReferenceManager._().DeriveReference(mVideoURI).getLocalURI();
             } catch (InvalidReferenceException e) {
-                Log.e(t, "Invalid reference exception");
+                Timber.e(e, "Invalid reference exception due to %s ", e.getMessage());
             }
 
             File videoFile = new File(videoFilename);
@@ -133,7 +133,7 @@ public class MediaLayout extends RelativeLayout implements OnClickListener {
                 // We should have a video clip, but the file doesn't exist.
                 String errorMsg =
                         getContext().getString(R.string.file_missing, videoFilename);
-                Log.e(t, errorMsg);
+                Timber.d("File %s is missing", videoFilename);
                 ToastUtils.showLongToast(errorMsg);
                 return;
             }
@@ -249,6 +249,7 @@ public class MediaLayout extends RelativeLayout implements OnClickListener {
                                     try {
                                         getContext().startActivity(i);
                                     } catch (ActivityNotFoundException e) {
+                                        Timber.d(e, "No Activity found to handle due to %s", e.getMessage());
                                         ToastUtils.showShortToast(getContext().getString(R.string.activity_not_found,
                                                         "view image"));
                                     }
@@ -266,14 +267,14 @@ public class MediaLayout extends RelativeLayout implements OnClickListener {
 
                 if (errorMsg != null) {
                     // errorMsg is only set when an error has occurred
-                    Log.e(t, errorMsg);
+                    Timber.e(errorMsg);
                     mMissingImage = new TextView(getContext());
                     mMissingImage.setText(errorMsg);
                     mMissingImage.setPadding(10, 10, 10, 10);
                     mMissingImage.setId(imageId);
                 }
             } catch (InvalidReferenceException e) {
-                Log.e(t, "image invalid reference exception");
+                Timber.e(e, "Invalid image reference due to %s ", e.getMessage());
             }
         } else {
             // There's no imageURI listed, so just ignore it.
@@ -414,7 +415,7 @@ public class MediaLayout extends RelativeLayout implements OnClickListener {
             // No picture
             dividerParams.addRule(RelativeLayout.BELOW, mView_Text.getId());
         } else {
-            Log.e(t, "Tried to add divider to uninitialized ATVWidget");
+            Timber.e("Tried to add divider to uninitialized ATVWidget");
             return;
         }
         addView(v, dividerParams);
@@ -423,6 +424,10 @@ public class MediaLayout extends RelativeLayout implements OnClickListener {
 
     public void setTextcolor(int color) {
         mView_Text.setTextColor(color);
+    }
+
+    public TextView getView_Text() {
+        return mView_Text;
     }
 
     /**
@@ -435,16 +440,29 @@ public class MediaLayout extends RelativeLayout implements OnClickListener {
         }
         if (mPlayer.isPlaying()) {
             mPlayer.stop();
-            mPlayer.reset();
+            Bitmap b =
+                    BitmapFactory.decodeResource(getContext().getResources(),
+                            android.R.drawable.ic_lock_silent_mode_off);
+            mAudioButton.setImageBitmap(b);
+
+        } else {
+            playAudio();
+            Bitmap b =
+                    BitmapFactory.decodeResource(getContext().getResources(),
+                            android.R.drawable.ic_media_pause);
+            mAudioButton.setImageBitmap(b);
         }
         mPlayer.setOnCompletionListener(new OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
                 resetTextFormatting();
                 mediaPlayer.reset();
+                Bitmap b =
+                        BitmapFactory.decodeResource(getContext().getResources(),
+                                android.R.drawable.ic_lock_silent_mode_off);
+                mAudioButton.setImageBitmap(b);
             }
         });
-        playAudio();
     }
 
     public void setAudioListener(AudioPlayListener listener) {

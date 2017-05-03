@@ -21,22 +21,19 @@ import android.preference.PreferenceManager;
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.dao.InstancesDao;
+import org.odk.collect.android.exception.BadUrlException;
 import org.odk.collect.android.preferences.PreferenceKeys;
 import org.odk.collect.android.provider.InstanceProviderAPI;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.util.regex.Pattern;
 
 public class UrlUtils {
 
     public static boolean isValidUrl(String url) {
 
-        try {
-            new URL(url);
-            return true;
-        } catch (MalformedURLException e) {
-            return false;
-        }
+        final Pattern urlPattern = Pattern.compile("^https?:\\/\\/.+$", Pattern.CASE_INSENSITIVE);
+
+        return urlPattern.matcher(url).matches();
     }
 
     public static String getSpreadsheetID(String id)
@@ -50,8 +47,8 @@ public class UrlUtils {
             if (cursor.getCount() > 0) {
                 cursor.moveToPosition(-1);
                 while (cursor.moveToNext()) {
-                    int subIdx = cursor.getColumnIndex
-                            (InstanceProviderAPI.InstanceColumns.SUBMISSION_URI);
+                    int subIdx = cursor.getColumnIndex(
+                            InstanceProviderAPI.InstanceColumns.SUBMISSION_URI);
                     urlString = cursor.isNull(subIdx) ? null : cursor.getString(subIdx);
 
                     // if we didn't find one in the content provider,
@@ -76,8 +73,8 @@ public class UrlUtils {
         final String googleHeader = "docs.google.com/spreadsheets/d/";
         String spreadsheetId;
         if (urlString == null || urlString.length() < googleHeader.length()) {
-            throw new BadUrlException
-                    (Collect.getInstance().getString(R.string.invalid_sheet_id, urlString));
+            throw new BadUrlException(
+                    Collect.getInstance().getString(R.string.invalid_sheet_id, urlString));
         } else {
             int start = urlString.indexOf(googleHeader) + googleHeader.length();
             int end = urlString.indexOf("/", start);
@@ -86,18 +83,13 @@ public class UrlUtils {
                 end = urlString.length();
             }
             if (start == -1 || end == -1) {
-                throw new BadUrlException
-                        (Collect.getInstance().getString(R.string.invalid_sheet_id, urlString));
+                throw new BadUrlException(
+                        Collect.getInstance().getString(R.string.invalid_sheet_id, urlString));
             }
             spreadsheetId = urlString.substring(start, end);
             return spreadsheetId;
         }
     }
 
-    public static class BadUrlException extends Exception {
-        public BadUrlException(String message) {
-            super(message);
-        }
-    }
 
 }

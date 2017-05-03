@@ -24,7 +24,6 @@
   <string name="capture_video">Ta opp video</string>
   <string name="change_language">Endre språk</string>
   <string name="change_password">Passord</string>
-  <string name="change_protocol_settings_default">Plattforminnstillinger</string>
   <string name="change_username">ODK brukernavn</string>
   <string name="clearanswer_confirm">Slette svar til \"%s\"?</string>
   <string name="clear_answer">Slett svar</string>
@@ -161,7 +160,6 @@
   <string name="success">Suksess</string>
   <string name="no_forms_uploaded">Beklager, opplasting feilet.</string>
   <string name="upload_results">Vis oversikt</string>
-  <string name="xform_parse_error">XForm parse error. %1$s is missing element %2$s</string>
   <string name="choose_sound">Velg lyd</string>
   <string name="choose_video">Velg video</string>
   <string name="choose_image">Velg bilde</string>
@@ -211,7 +209,6 @@
   <string name="admin_preferences">Admin Settings</string>
   <string name="admin_access_settings">Tap for admin access to settings</string>
   <string name="user_access_form_entry">User can access Form Entry items:</string>
-  <string name="admin_advanced_settings">Avanserte innstillinger (i samarbeid med support):</string>
   <string name="save_mid">Mid-form saving</string>
   <string name="enter_new_password">Enter new password</string>
   <string name="verify_new_password">Re-enter new password</string>
@@ -240,12 +237,6 @@
   <string name="swipe_instructions">You are at the start of %s. Swipe the screen as shown below to go backward and forward.</string>
   <string name="buttons_instructions">You are at the start of %s. Tap the arrow buttons below to go backward and forward.</string>
   <string name="swipe_buttons_instructions">You are at the start of %s. Swipe the screen as shown below or tap the arrow buttons to go backward and forward.</string>
-  <string name="form_processing_logic">Skjemaregler</string>
-  <string name="form_processing_logic_recommended">Anbefalt (standard)</string>
-  <string name="form_processing_logic_0">Januar 2015 (raskest)</string>
-  <string name="form_processing_logic_1">Januar 2015 (sikrest)</string>
-  <string name="form_processing_logic_2">Medio 2014 (treg)</string>
-  <string name="form_processing_logic_3">Primo 2014 (rask)</string>
   <string name="launch_printer">Initiate Printing</string>
   <string name="no_printer">The requested printer is not installed. Please install the printer.</string>
   <string name="constraint_behavior">Begrens prosesseringsmetoden</string>
@@ -303,8 +294,6 @@
   <string name="google_set_account">Du har valgt Google Sheets som din server. Nå må du angi en Google-konto i Generelle innstillinger før du fortsetter.</string>
   <string name="invalid_oauth">Ugyldig OAuth2 token.</string>
   <string name="google_repeat_error">Google Sheets støtter ikke gjentagelser. </string>
-  <string name="google_audio_error">Google Sheets støtter ikke lydfiler. </string>
-  <string name="google_video_error">Google Sheets støtter ikke videofiler. </string>
   <string name="odk_auth_auth_fail">Feil ved autentisering av ODK Autosend. Sjekk innstillingene dine.</string>
   <string name="odk_auto_note">ODK Autosend kvittering</string>
   <string name="notification_error">Feil ved visning av kvitteringstekst</string>

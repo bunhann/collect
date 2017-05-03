@@ -22,7 +22,6 @@
   <string name="capture_video">Записать видео</string>
   <string name="change_language">Выбрать язык</string>
   <string name="change_password">Пароль ODK</string>
-  <string name="change_protocol_settings_default">Настройки сервера</string>
   <string name="change_username">Имя пользователя ODK</string>
   <string name="clearanswer_confirm">Удалить ответ к \"%s\"?</string>
   <string name="clear_answer">Удалить ответ</string>
@@ -159,7 +158,6 @@
   <string name="success">Успех</string>
   <string name="no_forms_uploaded">Форма не была загружена.</string>
   <string name="upload_results">Загрузить результаты</string>
-  <string name="xform_parse_error">Ошибка распознавания XForm. В %1$s отсутствует элемент %2$s</string>
   <string name="choose_sound">Выберите аудио</string>
   <string name="choose_video">Выберите видео</string>
   <string name="choose_image">Выберите изображение</string>
@@ -209,7 +207,6 @@
   <string name="admin_preferences">Администрирование</string>
   <string name="admin_access_settings">Нажмите для админского доступа к настройкам</string>
   <string name="user_access_form_entry">Пользователь имеет доступ в формах к:</string>
-  <string name="admin_advanced_settings">Дополнительные настройки:</string>
   <string name="save_mid">Сохранить форму</string>
   <string name="enter_new_password">Укажите новый пароль</string>
   <string name="verify_new_password">Повтор нового пароля</string>
@@ -238,12 +235,6 @@
   <string name="swipe_instructions">Вы находитесь в начале %s. Прокручивайте экран, как показано ниже, чтобы двигаться вперёд и назад.</string>
   <string name="buttons_instructions">Вы находитесь в начале %s. Нажимайте кнопки со стрелками, чтобы двигаться вперёд и назад.</string>
   <string name="swipe_buttons_instructions">Вы находитесь в начале %s. Прокручивайте экран, как показано ниже, или нажимайте кнопки со стрелками, чтобы двигаться вперёд и назад.</string>
-  <string name="form_processing_logic">Логика обработки формы</string>
-  <string name="form_processing_logic_recommended">Рекомендуемая (по умолчанию)</string>
-  <string name="form_processing_logic_0">От января 2015 (самая быстрая)</string>
-  <string name="form_processing_logic_1">От января 2015 (самая безопасная)</string>
-  <string name="form_processing_logic_2">От середины 2014 (медленная)</string>
-  <string name="form_processing_logic_3">От начала 2014 (быстрая)</string>
   <string name="launch_printer">Распечатать</string>
   <string name="no_printer">Принтер не установлен или не подключен.</string>
   <string name="constraint_behavior">Способ проверки ограничений</string>

@@ -25,7 +25,6 @@
   <string name="capture_video">Nagraj Wideo</string>
   <string name="change_language">Zmień Język</string>
   <string name="change_password">Hasło ODK</string>
-  <string name="change_protocol_settings_default">Ustawienia Platformy</string>
   <string name="change_username">Nazwa użytkownika ODK</string>
   <string name="clearanswer_confirm">Czy usunąć odpowiedź na \"%s\"?</string>
   <string name="clear_answer">Usuń odpowiedź</string>
@@ -165,7 +164,6 @@
   <string name="success">Sukces</string>
   <string name="no_forms_uploaded">Przykro mi, nie wysłano żadnego formularza.</string>
   <string name="upload_results">Wyślij Wyniki</string>
-  <string name="xform_parse_error">Błąd analizy XForm. Brakuje elementu %2$s w %1$s</string>
   <string name="choose_sound">Wybierz Dźwięk</string>
   <string name="choose_video">Wybierz Wideo</string>
   <string name="choose_image">Wybierz Obraz</string>
@@ -216,7 +214,6 @@
   <string name="admin_preferences">Ustawienia Administratora</string>
   <string name="admin_access_settings">Naciśnij aby mieć dostęp do ustawień administratora</string>
   <string name="user_access_form_entry">Użytkownik może korzystać z pozycji Wypełniania Formularza:</string>
-  <string name="admin_advanced_settings">Ustawienia zaawansowane (gdy zalecone):</string>
   <string name="save_mid">Zapisz Formularz</string>
   <string name="enter_new_password">Wprowadź nowe hasło</string>
   <string name="verify_new_password">Wprowadź powtórnie nowe hasło</string>
@@ -247,12 +244,6 @@
   <string name="swipe_instructions">Jesteś na początku %s. Przeciągnij po ekranie jak pokazane poniżej aby przejść wstecz lub do przodu.</string>
   <string name="buttons_instructions">Jesteś na początku %s. Naciśnij przyciski strzałek poniżej aby przejść wstecz i do przodu.</string>
   <string name="swipe_buttons_instructions">Jesteś na początku %s. Przeciągnij po ekranie jak pokazane poniżej lub naciśnij przyciski strzałek poniżej aby przejść wstecz lub do przodu.</string>
-  <string name="form_processing_logic">Logika przetwarzania formularza</string>
-  <string name="form_processing_logic_recommended">Zalecane (domyślne)</string>
-  <string name="form_processing_logic_0">Styczeń 2015 (najszybszy)</string>
-  <string name="form_processing_logic_1">Styczeń 2015 (najbezpieczniejszy)</string>
-  <string name="form_processing_logic_2">W trakcie 2014 (wolny)</string>
-  <string name="form_processing_logic_3">Początek 2014 (szybki)</string>
   <string name="launch_printer">Inicjalizuj Drukowanie</string>
   <string name="no_printer">Żądana drukarka nie jest zainstalowana. Proszę, zainstaluj drukarkę.</string>
   <string name="constraint_behavior">Przetwarzam zachowanie ograniczeń</string>
@@ -310,8 +301,6 @@
   <string name="google_set_account">Wybrałeś Google Sheets jako twój serwer, wybierz odpowiadające mu konto Google w Ustawieniach Ogólnych zanim będziesz kontynuowć.</string>
   <string name="invalid_oauth">Niewłaściwy token OAuth 2</string>
   <string name="google_repeat_error">Powtórzenia obecnie nie są wspierane przez Google Sheets.</string>
-  <string name="google_audio_error">Pliki audio nie są wspierane przez Google Sheets w tym razem.</string>
-  <string name="google_video_error">Pliki wideo nie są obsługiwane przez Google Sheets tym razem.</string>
   <string name="odk_auth_auth_fail">Błąd autentykacji ODK Autosend, proszę upewnij się, że twoje ustawienia są poprawne</string>
   <string name="odk_auto_note">Powiadomienie ODK Autosend</string>
   <string name="notification_error">Błąd przy wyświetlaniu tekstu powiadomienia</string>

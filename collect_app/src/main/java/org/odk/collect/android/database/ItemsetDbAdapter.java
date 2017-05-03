@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import org.odk.collect.android.application.Collect;
 
@@ -12,11 +11,12 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import timber.log.Timber;
+
 public class ItemsetDbAdapter {
 
     public static final String KEY_ID = "_id";
 
-    private static final String TAG = "ItemsetDbAdapter";
     private DatabaseHelper mDbHelper;
     private SQLiteDatabase mDb;
 
@@ -51,8 +51,7 @@ public class ItemsetDbAdapter {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            Log.w(TAG, "Upgrading database from version " + oldVersion + " to "
-                    + newVersion + ", which will destroy all old data");
+            Timber.w("Upgrading database from version %d to %d, which will destroy all old data", oldVersion, newVersion);
             // first drop all of our generated itemset tables
             Cursor c = db.query(ITEMSET_TABLE, null, null, null, null, null, null);
             if (c != null) {
@@ -113,7 +112,7 @@ public class ItemsetDbAdapter {
         sb.append(");");
 
         String tableCreate = sb.toString();
-        Log.i(TAG, "create string: " + tableCreate);
+        Timber.i("create string: %s", tableCreate);
         mDb.execSQL(tableCreate);
 
         ContentValues cv = new ContentValues();
@@ -141,7 +140,7 @@ public class ItemsetDbAdapter {
     public boolean tableExists(String tableName) {
         // select name from sqlite_master where type = 'table'
         String selection = "type=? and name=?";
-        String selectionArgs[] = {
+        String[] selectionArgs = {
                 "table", DATABASE_TABLE + tableName
         };
         Cursor c = mDb.query("sqlite_master", null, selection, selectionArgs,
@@ -164,9 +163,8 @@ public class ItemsetDbAdapter {
     }
 
     public Cursor query(String hash, String selection, String[] selectionArgs) throws SQLException {
-        Cursor mCursor = mDb.query(true, DATABASE_TABLE + hash, null, selection, selectionArgs,
+        return mDb.query(true, DATABASE_TABLE + hash, null, selection, selectionArgs,
                 null, null, null, null);
-        return mCursor;
     }
 
     public void dropTable(String pathHash, String path) {
@@ -186,8 +184,7 @@ public class ItemsetDbAdapter {
         String[] selectionArgs = {
                 path
         };
-        Cursor c = mDb.query(ITEMSET_TABLE, null, selection, selectionArgs, null, null, null);
-        return c;
+        return mDb.query(ITEMSET_TABLE, null, selection, selectionArgs, null, null, null);
     }
 
     public void delete(String path) {
@@ -213,13 +210,12 @@ public class ItemsetDbAdapter {
         try {
             md = MessageDigest.getInstance("MD5");
         } catch (NoSuchAlgorithmException e) {
-            Log.e("MD5", e.getMessage());
+            Timber.e(e, "Unable to get MD5 algorithm due to : %s ", e.getMessage());
         }
         md.update(toEncode.getBytes());
         byte[] digest = md.digest();
         BigInteger bigInt = new BigInteger(1, digest);
-        String hashtext = bigInt.toString(16);
-        return hashtext;
+        return bigInt.toString(16);
     }
 
 }

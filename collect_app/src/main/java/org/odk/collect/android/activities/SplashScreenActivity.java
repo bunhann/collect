@@ -42,6 +42,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import timber.log.Timber;
+
 public class SplashScreenActivity extends Activity {
 
     private static final int mSplashTimeout = 2000; // milliseconds
@@ -70,8 +72,8 @@ public class SplashScreenActivity extends Activity {
         setContentView(R.layout.splash_screen);
 
         // get the shared preferences object
-        SharedPreferences mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        Editor editor = mSharedPreferences.edit();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        Editor editor = sharedPreferences.edit();
 
         // get the package info object with version number
         PackageInfo packageInfo = null;
@@ -80,17 +82,18 @@ public class SplashScreenActivity extends Activity {
                     getPackageManager().getPackageInfo(getPackageName(),
                             PackageManager.GET_META_DATA);
         } catch (NameNotFoundException e) {
+            Timber.e(e, "Unable to get package info");
         }
 
-        boolean firstRun = mSharedPreferences.getBoolean(PreferenceKeys.KEY_FIRST_RUN, true);
+        boolean firstRun = sharedPreferences.getBoolean(PreferenceKeys.KEY_FIRST_RUN, true);
         boolean showSplash =
-                mSharedPreferences.getBoolean(PreferenceKeys.KEY_SHOW_SPLASH, false);
+                sharedPreferences.getBoolean(PreferenceKeys.KEY_SHOW_SPLASH, false);
         String splashPath =
-                mSharedPreferences.getString(PreferenceKeys.KEY_SPLASH_PATH,
+                sharedPreferences.getString(PreferenceKeys.KEY_SPLASH_PATH,
                         getString(R.string.default_splash_path));
 
         // if you've increased version code, then update the version number and set firstRun to true
-        if (mSharedPreferences.getLong(PreferenceKeys.KEY_LAST_VERSION, 0)
+        if (sharedPreferences.getLong(PreferenceKeys.KEY_LAST_VERSION, 0)
                 < packageInfo.versionCode) {
             editor.putLong(PreferenceKeys.KEY_LAST_VERSION, packageInfo.versionCode);
             editor.apply();
@@ -132,6 +135,7 @@ public class SplashScreenActivity extends Activity {
                 fis.close();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
+                Timber.e(e, "Unable to close file input stream");
             }
 
             int scale = 1;
@@ -153,8 +157,10 @@ public class SplashScreenActivity extends Activity {
                 fis.close();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
+                Timber.e(e, "Unable to close file input stream");
             }
         } catch (FileNotFoundException e) {
+            Timber.e(e);
         }
         return b;
     }
@@ -187,6 +193,7 @@ public class SplashScreenActivity extends Activity {
                         count += 100;
                     }
                 } catch (Exception e) {
+                    Timber.e(e);
                 } finally {
                     endSplashScreen();
                 }

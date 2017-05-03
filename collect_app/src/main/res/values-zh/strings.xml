@@ -151,7 +151,6 @@
   <string name="success">成功</string>
   <string name="no_forms_uploaded">没有表格被上传.</string>
   <string name="upload_results">上传结果</string>
-  <string name="xform_parse_error">XForm 读取错误. %1$s 缺少元素 %2$s</string>
   <string name="choose_sound">选择音频</string>
   <string name="choose_video">选择视频</string>
   <string name="choose_image">选择图片</string>
@@ -228,10 +227,6 @@
   <string name="swipe_instructions">您在 %s 的开始. 如屏幕所示滑动以前进或后退.</string>
   <string name="buttons_instructions">您在 %s 的开始. 点击下面的箭头按钮以前进或后退.</string>
   <string name="swipe_buttons_instructions">您在 %s 的开始. 如屏幕所示滑动或点击下面的箭头按钮以前进或后退.</string>
-  <string name="form_processing_logic_0">2015年1月(最快)</string>
-  <string name="form_processing_logic_1">2015年1月(最安全)</string>
-  <string name="form_processing_logic_2">2014年中(緩慢)</string>
-  <string name="form_processing_logic_3">2014年初(快速)</string>
   <string name="launch_printer">初始化打印</string>
   <string name="no_printer">请求的打印机未被安装. 请安装打印机.</string>
   <string name="constraint_behavior">约束检查</string>

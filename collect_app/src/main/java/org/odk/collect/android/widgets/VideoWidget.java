@@ -25,7 +25,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore.Video;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -49,6 +48,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import timber.log.Timber;
+
 /**
  * Widget that allows user to take pictures, sounds or video and add them to the
  * form.
@@ -57,7 +58,6 @@ import java.util.Locale;
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
 public class VideoWidget extends QuestionWidget implements IBinaryWidget {
-    private final static String t = "MediaWidget";
 
     private Button mCaptureButton;
     private Button mPlayButton;
@@ -111,7 +111,7 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
                 // of the intent - using the MediaStore.EXTRA_OUTPUT to get the data
                 // Have it saving to an intermediate location instead of final destination
                 // to allow the current location to catch issues with the intermediate file
-                Log.i(t, "The build of this device is " + android.os.Build.MODEL);
+                Timber.i("The build of this device is %s", android.os.Build.MODEL);
                 if (NEXUS7.equals(android.os.Build.MODEL) && Build.VERSION.SDK_INT == 18) {
                     nexus7Uri = getOutputMediaFileUri(MEDIA_TYPE_VIDEO);
                     i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, nexus7Uri);
@@ -121,10 +121,10 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
                 }
 
                 // request high resolution if configured for that...
-                boolean high_resolution = settings.getBoolean(
+                boolean highResolution = settings.getBoolean(
                         PreferenceKeys.KEY_HIGH_RESOLUTION,
                         VideoWidget.DEFAULT_HIGH_RESOLUTION);
-                if (high_resolution) {
+                if (highResolution) {
                     i.putExtra(android.provider.MediaStore.EXTRA_VIDEO_QUALITY, 1);
                 }
                 try {
@@ -248,7 +248,7 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
         // delete from media provider
         int del = MediaUtils.deleteVideoFileFromMediaProvider(
                 mInstanceFolder + File.separator + name);
-        Log.i(t, "Deleted " + del + " rows from media content provider");
+        Timber.i("Deleted %d rows from media content provider", del);
     }
 
     @Override
@@ -271,10 +271,6 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
 
     @Override
     public void setBinaryData(Object binaryuri) {
-        // you are replacing an answer. remove the media.
-        if (mBinaryName != null) {
-            deleteMedia();
-        }
 
         // get the file path and create a copy in the instance folder
         String binaryPath = MediaUtils.getPathFromUri(this.getContext(), (Uri) binaryuri,
@@ -295,11 +291,15 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
             values.put(Video.Media.DATE_ADDED, System.currentTimeMillis());
             values.put(Video.Media.DATA, newVideo.getAbsolutePath());
 
-            Uri VideoURI = getContext().getContentResolver().insert(
+            Uri videoURI = getContext().getContentResolver().insert(
                     Video.Media.EXTERNAL_CONTENT_URI, values);
-            Log.i(t, "Inserting VIDEO returned uri = " + VideoURI.toString());
+            Timber.i("Inserting VIDEO returned uri = %s", videoURI.toString());
         } else {
-            Log.e(t, "Inserting Video file FAILED");
+            Timber.e("Inserting Video file FAILED");
+        }
+        // you are replacing an answer. remove the media.
+        if (mBinaryName != null && !mBinaryName.equals(newVideo.getName())) {
+            deleteMedia();
         }
 
         mBinaryName = newVideo.getName();
@@ -312,8 +312,7 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
             Uri mediaUri = (Uri) binaryuri;
             File fileToDelete = new File(mediaUri.getPath());
             int delCount = fileToDelete.delete() ? 1 : 0;
-            Log.i(t, "Deleting original capture of file: " + mediaUri.toString() + " count: "
-                    + delCount);
+            Timber.i("Deleting original capture of file: %s count: %d", mediaUri.toString(), delCount);
         }
     }
 
@@ -378,7 +377,7 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
         // Create the storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
-                Log.d(t, "failed to create directory");
+                Timber.d("failed to create directory");
                 return null;
             }
         }
@@ -388,11 +387,11 @@ public class VideoWidget extends QuestionWidget implements IBinaryWidget {
                 new Date());
         File mediaFile;
         if (type == MEDIA_TYPE_IMAGE) {
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_" + timeStamp + ".jpg");
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator
+                    + "IMG_" + timeStamp + ".jpg");
         } else if (type == MEDIA_TYPE_VIDEO) {
-            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "VID_" + timeStamp + ".mp4");
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator
+                    + "VID_" + timeStamp + ".mp4");
         } else {
             return null;
         }

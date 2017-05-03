@@ -21,7 +21,6 @@ import android.database.SQLException;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import org.odk.collect.android.R;
@@ -52,9 +51,6 @@ import org.opendatakit.httpclientandroidlib.entity.mime.content.StringBody;
 import org.opendatakit.httpclientandroidlib.protocol.HttpContext;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.SocketTimeoutException;
 import java.net.URLDecoder;
@@ -65,8 +61,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import timber.log.Timber;
 
 /**
  * Background task for uploading completed forms.
@@ -75,7 +74,44 @@ import java.util.Set;
  */
 public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploaderTask.Outcome> {
 
-    private static final String t = "InstanceUploaderTask";
+    private static enum ContentTypeMapping {
+        XML("xml",  ContentType.TEXT_XML),
+      _3GPP("3gpp", ContentType.create("audio/3gpp")),
+       _3GP("3gp",  ContentType.create("video/3gpp")),
+        AVI("avi",  ContentType.create("video/avi")),
+        AMR("amr",  ContentType.create("audio/amr")),
+        CSV("csv",  ContentType.create("text/csv")),
+        JPG("jpg",  ContentType.create("image/jpeg")),
+        MP3("mp3",  ContentType.create("audio/mp3")),
+        MP4("mp4",  ContentType.create("video/mp4")),
+        OGA("oga",  ContentType.create("audio/ogg")),
+        OGG("ogg",  ContentType.create("audio/ogg")),
+        OGV("ogv",  ContentType.create("video/ogg")),
+        WAV("wav",  ContentType.create("audio/wav")),
+       WEBM("webm", ContentType.create("video/webm")),
+        XLS("xls",  ContentType.create("application/vnd.ms-excel"));
+
+        private String extension;
+        private ContentType contentType;
+
+        ContentTypeMapping(String extension, ContentType contentType) {
+            this.extension = extension;
+            this.contentType = contentType;
+        }
+
+        public static ContentType of(String fileName) {
+            String extension = getFileExtension(fileName);
+
+            for (ContentTypeMapping m : values()) {
+                if (m.extension.equals(extension)) {
+                    return m.contentType;
+                }
+            }
+
+            return null;
+        }
+    }
+
     // it can take up to 27 seconds to spin up Aggregate
     private static final int CONNECTION_TIMEOUT = 60000;
     private static final String fail = "Error: ";
@@ -98,7 +134,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
      * @return false if credentials are required and we should terminate immediately.
      */
     private boolean uploadOneSubmission(String urlString, String id, String instanceFilePath,
-            Uri toUpdate, HttpContext localContext, Map<Uri, Uri> uriRemap, Outcome outcome) {
+                                        Uri toUpdate, HttpContext localContext, Map<Uri, Uri> uriRemap, Outcome outcome) {
 
         Collect.getInstance().getActivityLogger().logAction(this, urlString, instanceFilePath);
 
@@ -122,7 +158,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                 WebUtils.enablePreemptiveBasicAuth(localContext, u.getHost());
             }
 
-            Log.i(t, "Using Uri remap for submission " + id + ". Now: " + u.toString());
+            Timber.i("Using Uri remap for submission %s. Now: %s", id, u.toString());
         } else {
 
             // if https then enable preemptive basic auth...
@@ -136,7 +172,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
             // prepare response
             HttpResponse response = null;
             try {
-                Log.i(t, "Issuing HEAD request for " + id + " to: " + u.toString());
+                Timber.i("Issuing HEAD request for %s to: %s", id, u.toString());
 
                 response = httpclient.execute(httpHead, localContext);
                 int statusCode = response.getStatusLine().getStatusCode();
@@ -154,14 +190,14 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                     WebUtils.discardEntityBytes(response);
                     if (locations != null && locations.length == 1) {
                         try {
-                            Uri uNew = Uri.parse(
+                            Uri newURI = Uri.parse(
                                     URLDecoder.decode(locations[0].getValue(), "utf-8"));
-                            if (u.getHost().equalsIgnoreCase(uNew.getHost())) {
+                            if (u.getHost().equalsIgnoreCase(newURI.getHost())) {
                                 openRosaServer = true;
                                 // trust the server to tell us a new location
                                 // ... and possibly to use https instead.
-                                uriRemap.put(u, uNew);
-                                u = uNew;
+                                uriRemap.put(u, newURI);
+                                u = newURI;
                             } else {
                                 // Don't follow a redirection attempt to a different host.
                                 // We can't tell if this is a spoof or not.
@@ -170,7 +206,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                                         fail
                                                 + "Unexpected redirection attempt to a different "
                                                 + "host: "
-                                                + uNew.toString());
+                                                + newURI.toString());
                                 cv.put(InstanceColumns.STATUS,
                                         InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
                                 Collect.getInstance().getContentResolver()
@@ -178,6 +214,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                                 return true;
                             }
                         } catch (Exception e) {
+                            Timber.e(e, "Exception thrown parsing URI for url %s", urlString);
                             outcome.mResults.put(id, fail + urlString + " " + e.toString());
                             cv.put(InstanceColumns.STATUS,
                                     InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
@@ -190,7 +227,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                     // may be a server that does not handle
                     WebUtils.discardEntityBytes(response);
 
-                    Log.w(t, "Status code on Head request: " + statusCode);
+                    Timber.w("Status code on Head request: %d", statusCode);
                     if (statusCode >= HttpStatus.SC_OK
                             && statusCode < HttpStatus.SC_MULTIPLE_CHOICES) {
                         outcome.mResults.put(
@@ -205,43 +242,33 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                         return true;
                     }
                 }
-            } catch (ClientProtocolException e) {
-                Log.e(t, e.toString());
-                outcome.mResults.put(id, fail + "Client Protocol Exception");
-                cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
-                Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
-                return true;
-            } catch (ConnectTimeoutException e) {
-                Log.e(t, e.toString());
-                outcome.mResults.put(id, fail + "Connection Timeout");
-                cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
-                Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
-                return true;
-            } catch (UnknownHostException e) {
-                Log.e(t, e.toString());
-                outcome.mResults.put(id, fail + e.toString() + " :: Network Connection Failed");
-                cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
-                Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
-                return true;
-            } catch (SocketTimeoutException e) {
-                Log.e(t, e.toString());
-                outcome.mResults.put(id, fail + "Connection Timeout");
-                cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
-                Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
-                return true;
-            } catch (HttpHostConnectException e) {
-                Log.e(t, e.toString());
-                outcome.mResults.put(id, fail + "Network Connection Refused");
+            } catch (ClientProtocolException | ConnectTimeoutException | UnknownHostException | SocketTimeoutException | HttpHostConnectException e) {
+                if (e instanceof ClientProtocolException) {
+                    outcome.mResults.put(id, fail + "Client Protocol Exception");
+                    Timber.e(e, "Client Protocol Exception");
+                } else if (e instanceof ConnectTimeoutException) {
+                    outcome.mResults.put(id, fail + "Connection Timeout");
+                    Timber.e(e, "Connection Timeout");
+                } else if (e instanceof UnknownHostException) {
+                    outcome.mResults.put(id, fail + e.toString() + " :: Network Connection Failed");
+                    Timber.e(e, "Network Connection Failed");
+                } else if (e instanceof SocketTimeoutException) {
+                    outcome.mResults.put(id, fail + "Connection Timeout");
+                    Timber.e(e, "Connection timeout");
+                } else {
+                    outcome.mResults.put(id, fail + "Network Connection Refused");
+                    Timber.e(e, "Network Connection Refused");
+                }
                 cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
                 Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
                 return true;
             } catch (Exception e) {
-                Log.e(t, e.toString());
                 String msg = e.getMessage();
                 if (msg == null) {
                     msg = e.toString();
                 }
                 outcome.mResults.put(id, fail + "Generic Exception: " + msg);
+                Timber.e(e);
                 cv.put(InstanceColumns.STATUS, InstanceProviderAPI.STATUS_SUBMISSION_FAILED);
                 Collect.getInstance().getContentResolver().update(toUpdate, cv, null, null);
                 return true;
@@ -270,8 +297,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
         // figure out what to do with them.
         File submissionFile = new File(instanceFile.getParentFile(), "submission.xml");
         if (submissionFile.exists()) {
-            Log.w(t,
-                    "submission.xml will be uploaded instead of " + instanceFile.getAbsolutePath());
+            Timber.w("submission.xml will be uploaded instead of %s", instanceFile.getAbsolutePath());
         } else {
             submissionFile = instanceFile;
         }
@@ -291,21 +317,17 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
         for (File f : allFiles) {
             String fileName = f.getName();
 
-            int dotIndex = fileName.lastIndexOf(".");
-            String extension = "";
-            if (dotIndex != -1) {
-                extension = fileName.substring(dotIndex + 1);
-            }
-
             if (fileName.startsWith(".")) {
-                // ignore invisible files
-                continue;
-            }
-            if (fileName.equals(instanceFile.getName())) {
+                continue; // ignore invisible files
+            } else if (fileName.equals(instanceFile.getName())) {
                 continue; // the xml file has already been added
             } else if (fileName.equals(submissionFile.getName())) {
                 continue; // the xml file has already been added
-            } else if (openRosaServer) {
+            }
+
+            String extension = getFileExtension(fileName);
+
+            if (openRosaServer) {
                 files.add(f);
             } else if (extension.equals("jpg")) { // legacy 0.9x
                 files.add(f);
@@ -318,7 +340,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
             } else if (extension.equals("osm")) { // legacy 0.9x
                 files.add(f);
             } else {
-                Log.w(t, "unrecognized file type " + f.getName());
+                Timber.w("unrecognized file type %s", f.getName());
             }
         }
 
@@ -341,120 +363,41 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
             // add the submission file first...
             FileBody fb = new FileBody(submissionFile, ContentType.TEXT_XML);
             builder.addPart("xml_submission_file", fb);
-            Log.i(t, "added xml_submission_file: " + submissionFile.getName());
+            Timber.i("added xml_submission_file: %s", submissionFile.getName());
             byteCount += submissionFile.length();
 
             for (; j < files.size(); j++) {
                 File f = files.get(j);
-                String fileName = f.getName();
-                int idx = fileName.lastIndexOf(".");
-                String extension = "";
-                if (idx != -1) {
-                    extension = fileName.substring(idx + 1);
-                }
-                String contentType = m.getMimeTypeFromExtension(extension);
 
                 // we will be processing every one of these, so
                 // we only need to deal with the content type determination...
-                if (extension.equals("xml")) {
-                    fb = new FileBody(f, ContentType.TEXT_XML);
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added xml file " + f.getName());
-                } else if (extension.equals("3gpp")) {
-                    fb = new FileBody(f, ContentType.create("audio/3gpp"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added audio file " + f.getName());
-                } else if (extension.equals("3gp")) {
-                    fb = new FileBody(f, ContentType.create("video/3gpp"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added video file " + f.getName());
-                } else if (extension.equals("avi")) {
-                    fb = new FileBody(f, ContentType.create("video/avi"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added video file " + f.getName());
-                } else if (extension.equals("amr")) {
-                    fb = new FileBody(f, ContentType.create("audio/amr"));
-                    builder.addPart(f.getName(), fb);
-                    Log.i(t, "added audio file " + f.getName());
-                } else if (extension.equals("csv")) {
-                    fb = new FileBody(f, ContentType.create("text/csv"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added csv file " + f.getName());
-                } else if (extension.equals("jpg")) {
-                    fb = new FileBody(f, ContentType.create("image/jpeg"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added image file " + f.getName());
-                } else if (extension.equals("mp3")) {
-                    fb = new FileBody(f, ContentType.create("audio/mp3"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added audio file " + f.getName());
-                } else if (extension.equals("mp4")) {
-                    fb = new FileBody(f, ContentType.create("video/mp4"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added video file " + f.getName());
-                } else if (extension.equals("oga")) {
-                    fb = new FileBody(f, ContentType.create("audio/ogg"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added audio file " + f.getName());
-                } else if (extension.equals("ogg")) {
-                    fb = new FileBody(f, ContentType.create("audio/ogg"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added video file " + f.getName());
-                } else if (extension.equals("ogv")) {
-                    fb = new FileBody(f, ContentType.create("video/ogg"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added video file " + f.getName());
-                } else if (extension.equals("wav")) {
-                    fb = new FileBody(f, ContentType.create("audio/wav"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added audio file " + f.getName());
-                } else if (extension.equals("webm")) {
-                    fb = new FileBody(f, ContentType.create("video/webm"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added video file " + f.getName());
-                } else if (extension.equals("xls")) {
-                    fb = new FileBody(f, ContentType.create("application/vnd.ms-excel"));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t, "added xls file " + f.getName());
-                } else if (contentType != null) {
-                    fb = new FileBody(f, ContentType.create(contentType));
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.i(t,
-                            "added recognized filetype (" + contentType + ") " + f.getName());
-                } else {
-                    contentType = "application/octet-stream";
-                    fb = new FileBody(f, ContentType.APPLICATION_OCTET_STREAM);
-                    builder.addPart(f.getName(), fb);
-                    byteCount += f.length();
-                    Log.w(t, "added unrecognized file (" + contentType + ") " + f.getName());
+                ContentType contentType = ContentTypeMapping.of(f.getName());
+                if (contentType == null) {
+                    String mime = m.getMimeTypeFromExtension(getFileExtension(f.getName()));
+                    if (mime != null) {
+                        contentType = ContentType.create(mime);
+                    } else {
+                        Timber.w("No specific MIME type found for file: %s", f.getName());
+                        contentType = ContentType.APPLICATION_OCTET_STREAM;
+                    }
                 }
+                fb = new FileBody(f, contentType);
+                builder.addPart(f.getName(), fb);
+                byteCount += f.length();
+                Timber.i("added file of type '%s' %s", contentType, f.getName());
 
                 // we've added at least one attachment to the request...
                 if (j + 1 < files.size()) {
                     if ((j - lastJ + 1 > 100) || (byteCount + files.get(j + 1).length()
                             > 10000000L)) {
                         // the next file would exceed the 10MB threshold...
-                        Log.i(t, "Extremely long post is being split into multiple posts");
+                        Timber.i("Extremely long post is being split into multiple posts");
                         try {
                             StringBody sb = new StringBody("yes",
                                     ContentType.TEXT_PLAIN.withCharset(Charset.forName("UTF-8")));
                             builder.addPart("*isIncomplete*", sb);
                         } catch (Exception e) {
+                            Timber.e(e);
                         }
                         ++j; // advance over the last attachment added...
                         break;
@@ -468,13 +411,13 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
             HttpResponse response = null;
 
             try {
-                Log.i(t, "Issuing POST request for " + id + " to: " + u.toString());
+                Timber.i("Issuing POST request for %s to: %s", id, u.toString());
                 response = httpclient.execute(httppost, localContext);
                 int responseCode = response.getStatusLine().getStatusCode();
                 HttpEntity httpEntity = response.getEntity();
                 messageParser = new ResponseMessageParser(httpEntity);
                 WebUtils.discardEntityBytes(response);
-                Log.i(t, "Response code:" + responseCode);
+                Timber.i("Response code:%d", responseCode);
                 // verify that the response was a 201 or 202.
                 // If it wasn't, the submission has failed.
                 if (responseCode != HttpStatus.SC_CREATED
@@ -488,9 +431,9 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                                 + " (" + responseCode + ") at " + urlString);
                     } else {
                         // If response from server is valid use that else use default messaging
-                        if (messageParser.isValid()){
+                        if (messageParser.isValid()) {
                             outcome.mResults.put(id, fail + messageParser.getMessageResponse());
-                        }else{
+                        } else {
                             outcome.mResults.put(id, fail + response.getStatusLine().getReasonPhrase()
                                     + " (" + responseCode + ") at " + urlString);
                         }
@@ -503,7 +446,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                     return true;
                 }
             } catch (Exception e) {
-                Log.e(t, e.toString());
+                Timber.e(e);
                 String msg = e.getMessage();
                 if (msg == null) {
                     msg = e.toString();
@@ -516,9 +459,9 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
         }
 
         // If response from server is valid use that else use default messaging
-        if (messageParser.isValid()){
+        if (messageParser.isValid()) {
             outcome.mResults.put(id, messageParser.getMessageResponse());
-        }else{
+        } else {
             // Default messaging
             outcome.mResults.put(id, Collect.getInstance().getString(R.string.success));
         }
@@ -548,7 +491,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
         String selection = selectionBuf.toString();
 
         String deviceId = new PropertyManager(Collect.getInstance().getApplicationContext())
-                .getSingularProperty(PropertyManager.OR_DEVICE_ID_PROPERTY);
+                .getSingularProperty(PropertyManager.withUri(PropertyManager.PROPMGR_DEVICE_ID));
 
         // get shared HttpContext so that authentication and cookies are retained.
         HttpContext localContext = Collect.getInstance().getHttpContext();
@@ -574,14 +517,15 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
 
                     // Use the app's configured URL unless the form included a submission URL
                     int subIdx = c.getColumnIndex(InstanceColumns.SUBMISSION_URI);
-                    String urlString = c.isNull(subIdx) ?
-                            getServerSubmissionURL() : c.getString(subIdx).trim();
+                    String urlString = c.isNull(subIdx)
+                            ? getServerSubmissionURL() : c.getString(subIdx).trim();
 
                     // add the deviceID to the request...
                     try {
                         urlString += "?deviceID=" + URLEncoder.encode(deviceId, "UTF-8");
                     } catch (UnsupportedEncodingException e) {
                         // unreachable...
+                        Timber.i(e, "Error encoding URL for device id : %s", deviceId);
                     }
 
                     if (!uploadOneSubmission(urlString, id, instance, toUpdate, localContext,
@@ -611,7 +555,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
             if (!processChunk(low, high, outcome, values)) {
                 return outcome;
             }
-            counter ++;
+            counter++;
         }
         return outcome;
     }
@@ -652,9 +596,9 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                     Set<String> keys = outcome.mResults.keySet();
                     Iterator<String> it = keys.iterator();
                     int count = keys.size();
-                    while(count > 0){
+                    while (count > 0) {
                         String[] selectionArgs = null;
-                        if(count > ApplicationConstants.SQLITE_MAX_VARIABLE_NUMBER - 1) {
+                        if (count > ApplicationConstants.SQLITE_MAX_VARIABLE_NUMBER - 1) {
                             selectionArgs = new String[
                                     ApplicationConstants.SQLITE_MAX_VARIABLE_NUMBER];
                         } else {
@@ -666,7 +610,7 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                         selection.append(InstanceColumns._ID + " IN (");
                         int i = 0;
 
-                        while (it.hasNext() && i < selectionArgs.length - 1){
+                        while (it.hasNext() && i < selectionArgs.length - 1) {
                             selectionArgs[i] = it.next();
                             selection.append("?");
 
@@ -684,8 +628,8 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                         Cursor results = null;
                         try {
                             results =
-                                    new InstancesDao().getInstancesCursor(selection.toString()
-                                            , selectionArgs);
+                                    new InstancesDao().getInstancesCursor(selection.toString(),
+                                            selectionArgs);
                             if (results.getCount() > 0) {
                                 Long[] toDelete = new Long[results.getCount()];
                                 results.moveToPosition(-1);
@@ -708,9 +652,9 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                                 }
 
                             }
-                        } catch (SQLException e){
-                            Log.e(t, e.getMessage(), e);
-                        } finally{
+                        } catch (SQLException e) {
+                            Timber.e(e);
+                        } finally {
                             if (results != null) {
                                 results.close();
                             }
@@ -739,16 +683,11 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
         }
     }
 
-
-    public static void copyToBytes(InputStream input, OutputStream output,
-            int bufferSize) throws IOException {
-        byte[] buf = new byte[bufferSize];
-        int bytesRead = input.read(buf);
-        while (bytesRead != -1) {
-            output.write(buf, 0, bytesRead);
-            bytesRead = input.read(buf);
+    private static String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf(".");
+        if (dotIndex == -1) {
+            return "";
         }
-        output.flush();
+        return fileName.substring(dotIndex + 1).toLowerCase(Locale.ROOT);
     }
-
 }

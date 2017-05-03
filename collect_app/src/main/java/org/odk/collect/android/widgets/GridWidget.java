@@ -17,7 +17,6 @@ package org.odk.collect.android.widgets;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.util.Log;
 import android.util.TypedValue;
 import android.util.DisplayMetrics;
 import android.view.Display;
@@ -55,6 +54,8 @@ import org.odk.collect.android.views.ExpandedHeightGridView;
 
 import java.io.File;
 import java.util.List;
+
+import timber.log.Timber;
 
 /**
  * GridWidget handles select-one fields using a grid of icons. The user clicks the desired icon and
@@ -107,10 +108,10 @@ public class GridWidget extends QuestionWidget {
         super(context, prompt);
 
         // SurveyCTO-added support for dynamic select content (from .csv files)
-        XPathFuncExpr xPathFuncExpr = ExternalDataUtil.getSearchXPathExpression(
+        XPathFuncExpr xpathFuncExpr = ExternalDataUtil.getSearchXPathExpression(
                 prompt.getAppearanceHint());
-        if (xPathFuncExpr != null) {
-            mItems = ExternalDataUtil.populateExternalChoices(prompt, xPathFuncExpr);
+        if (xpathFuncExpr != null) {
+            mItems = ExternalDataUtil.populateExternalChoices(prompt, xpathFuncExpr);
         } else {
             mItems = prompt.getSelectChoices();
         }
@@ -223,7 +224,7 @@ public class GridWidget extends QuestionWidget {
                         errorMsg = getContext().getString(R.string.file_missing, imageFile);
                     }
                 } catch (InvalidReferenceException e) {
-                    Log.e("GridWidget", "image invalid reference exception");
+                    Timber.e("image invalid reference exception");
                 }
             } else {
                 errorMsg = "";
@@ -234,14 +235,14 @@ public class GridWidget extends QuestionWidget {
 
                 TextView missingImage = new TextView(getContext());
                 missingImage.setTextSize(TypedValue.COMPLEX_UNIT_DIP, mAnswerFontsize);
-                missingImage.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+                missingImage.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
                 missingImage.setPadding(IMAGE_PADDING, IMAGE_PADDING, IMAGE_PADDING, IMAGE_PADDING);
 
                 if (choices[i] != null && choices[i].length() != 0) {
                     missingImage.setText(choices[i]);
                 } else {
                     // errorMsg is only set when an error has occurred
-                    Log.e("GridWidget", errorMsg);
+                    Timber.e(errorMsg);
                     missingImage.setText(errorMsg);
                 }
 
@@ -307,8 +308,7 @@ public class GridWidget extends QuestionWidget {
                         stopAudio();
                     }
                     selected[i] = false;
-                    if (imageViews[i] != null) {
-                    }
+                    imageViews[i].setBackgroundColor(0);
                 }
                 selected[position] = true;
                 Collect.getInstance().getActivityLogger().logInstanceAction(this,
@@ -331,9 +331,9 @@ public class GridWidget extends QuestionWidget {
         }
 
         for (int i = 0; i < mItems.size(); ++i) {
-            String sMatch = mItems.get(i).getValue();
+            String match = mItems.get(i).getValue();
 
-            selected[i] = sMatch.equals(s);
+            selected[i] = match.equals(s);
             if (selected[i]) {
                 imageViews[i].setBackgroundColor(Color.rgb(orangeRedVal, orangeGreenVal,
                         orangeBlueVal));
@@ -363,6 +363,7 @@ public class GridWidget extends QuestionWidget {
     public void clearAnswer() {
         for (int i = 0; i < mItems.size(); ++i) {
             selected[i] = false;
+            imageViews[i].setBackgroundColor(0);
         }
 
     }

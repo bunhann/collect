@@ -14,7 +14,6 @@
 
 package org.odk.collect.android.logic;
 
-import android.util.Log;
 
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
@@ -51,6 +50,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import timber.log.Timber;
+
 /**
  * This class is a wrapper for Javarosa's FormEntryController. In theory, if you wanted to replace
  * javarosa as the form engine, you should only need to replace the methods in this file. Also, we
@@ -61,7 +62,6 @@ import java.util.List;
  */
 public class FormController {
 
-    private static final String t = "FormController";
 
     public static final boolean STEP_INTO_GROUP = true;
     public static final boolean STEP_OVER_GROUP = false;
@@ -90,12 +90,10 @@ public class FormController {
         }
     }
 
-    ;
-
     /**
      * Classes needed to serialize objects. Need to put anything from JR in here.
      */
-    private final static String[] SERIALIABLE_CLASSES = {
+    private static final String[] SERIALIABLE_CLASSES = {
             "org.javarosa.core.services.locale.ResourceFileDataSource", // JavaRosaCoreModule
             "org.javarosa.core.services.locale.TableLocaleSource", // JavaRosaCoreModule
             "org.javarosa.core.model.FormDef",
@@ -221,35 +219,36 @@ public class FormController {
         return value;
     }
 
-    public FormIndex getIndexFromXPath(String xPath) {
-        if (xPath.equals("beginningOfForm")) {
-            return FormIndex.createBeginningOfFormIndex();
-        } else if (xPath.equals("endOfForm")) {
-            return FormIndex.createEndOfFormIndex();
-        } else if (xPath.equals("unexpected")) {
-            Log.e(t, "Unexpected string from XPath");
-            throw new IllegalArgumentException("unexpected string from XPath");
-        } else {
-            FormIndex returned = null;
-            FormIndex saved = getFormIndex();
-            // the only way I know how to do this is to step through the entire form
-            // until the XPath of a form entry matches that of the supplied XPath
-            try {
-                jumpToIndex(FormIndex.createBeginningOfFormIndex());
-                int event = stepToNextEvent(true);
-                while (event != FormEntryController.EVENT_END_OF_FORM) {
-                    String candidateXPath = getXPath(getFormIndex());
-                    // Log.i(t, "xpath: " + candidateXPath);
-                    if (candidateXPath.equals(xPath)) {
-                        returned = getFormIndex();
-                        break;
+    public FormIndex getIndexFromXPath(String xpath) {
+        switch (xpath) {
+            case "beginningOfForm":
+                return FormIndex.createBeginningOfFormIndex();
+            case "endOfForm":
+                return FormIndex.createEndOfFormIndex();
+            case "unexpected":
+                Timber.e("Unexpected string from XPath");
+                throw new IllegalArgumentException("unexpected string from XPath");
+            default:
+                FormIndex returned = null;
+                FormIndex saved = getFormIndex();
+                // the only way I know how to do this is to step through the entire form
+                // until the XPath of a form entry matches that of the supplied XPath
+                try {
+                    jumpToIndex(FormIndex.createBeginningOfFormIndex());
+                    int event = stepToNextEvent(true);
+                    while (event != FormEntryController.EVENT_END_OF_FORM) {
+                        String candidateXPath = getXPath(getFormIndex());
+                        // Log.i(t, "xpath: " + candidateXPath);
+                        if (candidateXPath.equals(xpath)) {
+                            returned = getFormIndex();
+                            break;
+                        }
+                        event = stepToNextEvent(true);
                     }
-                    event = stepToNextEvent(true);
+                } finally {
+                    jumpToIndex(saved);
                 }
-            } finally {
-                jumpToIndex(saved);
-            }
-            return returned;
+                return returned;
         }
     }
 
@@ -421,13 +420,6 @@ public class FormController {
 
     }
 
-    public boolean currentPromptIsQuestion() {
-        return (getEvent() == FormEntryController.EVENT_QUESTION
-                || ((getEvent() == FormEntryController.EVENT_GROUP ||
-                getEvent() == FormEntryController.EVENT_REPEAT)
-                && indexIsInFieldList()));
-    }
-
     /**
      * Tests if the current FormIndex is located inside a group that is marked as a "field-list"
      *
@@ -437,6 +429,12 @@ public class FormController {
         return indexIsInFieldList(getFormIndex());
     }
 
+    public boolean currentPromptIsQuestion() {
+        return (getEvent() == FormEntryController.EVENT_QUESTION
+                || ((getEvent() == FormEntryController.EVENT_GROUP
+                || getEvent() == FormEntryController.EVENT_REPEAT)
+                && indexIsInFieldList()));
+    }
 
     /**
      * Attempts to save answer into the given FormIndex into the data model.
@@ -490,8 +488,8 @@ public class FormController {
      * @return the next event that should be handled by a view.
      */
     public int stepToNextEvent(boolean stepIntoGroup) {
-        if ((getEvent() == FormEntryController.EVENT_GROUP ||
-                getEvent() == FormEntryController.EVENT_REPEAT)
+        if ((getEvent() == FormEntryController.EVENT_GROUP
+                || getEvent() == FormEntryController.EVENT_REPEAT)
                 && indexIsInFieldList() && !stepIntoGroup) {
             return stepOverGroup();
         } else {
@@ -549,10 +547,10 @@ public class FormController {
             if (getEvent() != FormEntryController.EVENT_BEGINNING_OF_FORM) {
                 int event = stepToPreviousEvent();
 
-                while (event == FormEntryController.EVENT_REPEAT_JUNCTURE ||
-                        event == FormEntryController.EVENT_PROMPT_NEW_REPEAT ||
-                        (event == FormEntryController.EVENT_QUESTION && indexIsInFieldList()) ||
-                        ((event == FormEntryController.EVENT_GROUP
+                while (event == FormEntryController.EVENT_REPEAT_JUNCTURE
+                        || event == FormEntryController.EVENT_PROMPT_NEW_REPEAT
+                        || (event == FormEntryController.EVENT_QUESTION && indexIsInFieldList())
+                        || ((event == FormEntryController.EVENT_GROUP
                                 || event == FormEntryController.EVENT_REPEAT)
                                 && !indexIsInFieldList())) {
                     event = stepToPreviousEvent();
@@ -575,8 +573,8 @@ public class FormController {
                             if (fclist.length > 1) {
                                 FormEntryCaption fc = fclist[fclist.length - 2];
                                 GroupDef pd = (GroupDef) fc.getFormElement();
-                                if (pd.getChildren().size() == 1 &&
-                                        ODKView.FIELD_LIST.equalsIgnoreCase(
+                                if (pd.getChildren().size() == 1
+                                        && ODKView.FIELD_LIST.equalsIgnoreCase(
                                                 pd.getAppearanceAttr())) {
                                     mFormEntryController.jumpToIndex(fc.getIndex());
                                 }
@@ -619,13 +617,11 @@ public class FormController {
                             // otherwise it's not a field-list group, so just skip it
                             break;
                         case FormEntryController.EVENT_REPEAT_JUNCTURE:
-                            Log.i(t, "repeat juncture: "
-                                    + getFormIndex().getReference());
+                            Timber.i("repeat juncture: %s", getFormIndex().getReference().toString());
                             // skip repeat junctures until we implement them
                             break;
                         default:
-                            Log.w(t,
-                                    "JavaRosa added a new EVENT type and didn't tell us... shame "
+                            Timber.w("JavaRosa added a new EVENT type and didn't tell us... shame "
                                             + "on them.");
                             break;
                     }
@@ -706,10 +702,8 @@ public class FormController {
                         saveAnswer(index, answer);
                     }
                 } else {
-                    Log.w(t,
-                            "Attempted to save an index referencing something other than a "
-                                    + "question: "
-                                    + index.getReference());
+                    Timber.w("Attempted to save an index referencing something other than a question: %s",
+                                    index.getReference().toString());
                 }
             }
         }
@@ -869,7 +863,7 @@ public class FormController {
                             "Only questions are allowed in 'field-list'.  Bad node is: "
                                     + index.getReference().toString(false);
                     RuntimeException e = new RuntimeException(errorMsg);
-                    Log.e(t, errorMsg);
+                    Timber.e(errorMsg);
                     throw e;
                 }
 
@@ -911,29 +905,29 @@ public class FormController {
         String constraintText = getBindAttribute(index, XFormParser.NAMESPACE_JAVAROSA,
                 "requiredMsg");
         if (constraintText != null) {
-            XPathExpression xPathRequiredMsg;
+            XPathExpression xpathRequiredMsg;
             try {
-                xPathRequiredMsg = XPathParseTool.parseXPath("string(" + constraintText + ")");
+                xpathRequiredMsg = XPathParseTool.parseXPath("string(" + constraintText + ")");
             } catch (Exception e) {
                 // Expected in probably most cases.
                 // This is a string literal, so no need to evaluate anything.
                 return constraintText;
             }
 
-            if (xPathRequiredMsg != null) {
+            if (xpathRequiredMsg != null) {
                 try {
                     FormDef form = mFormEntryController.getModel().getForm();
-                    TreeElement mTreeElement = form.getMainInstance().resolveReference(
+                    TreeElement treeElement = form.getMainInstance().resolveReference(
                             index.getReference());
                     EvaluationContext ec = new EvaluationContext(form.getEvaluationContext(),
-                            mTreeElement.getRef());
-                    Object value = xPathRequiredMsg.eval(form.getMainInstance(), ec);
+                            treeElement.getRef());
+                    Object value = xpathRequiredMsg.eval(form.getMainInstance(), ec);
                     if (value != "") {
                         return (String) value;
                     }
                     return null;
                 } catch (Exception e) {
-                    Log.e(t, "Error evaluating a valid-looking required xpath ", e);
+                    Timber.e(e, "Error evaluating a valid-looking required xpath ");
                     return constraintText;
                 }
             } else {
@@ -1098,10 +1092,8 @@ public class FormController {
         // assume no binary data inside the model.
         FormInstance datamodel = getInstance();
         XFormSerializingVisitor serializer = new XFormSerializingVisitor();
-        ByteArrayPayload payload =
-                (ByteArrayPayload) serializer.createSerializedPayload(datamodel);
 
-        return payload;
+        return (ByteArrayPayload) serializer.createSerializedPayload(datamodel);
     }
 
     /**
@@ -1110,10 +1102,8 @@ public class FormController {
     public ByteArrayPayload getSubmissionXml() throws IOException {
         FormInstance instance = getInstance();
         XFormSerializingVisitor serializer = new XFormSerializingVisitor();
-        ByteArrayPayload payload =
-                (ByteArrayPayload) serializer.createSerializedPayload(instance,
-                        getSubmissionDataReference());
-        return payload;
+        return (ByteArrayPayload) serializer.createSerializedPayload(instance,
+                getSubmissionDataReference());
     }
 
     /**
@@ -1127,7 +1117,9 @@ public class FormController {
                 return e;
             } else if (e.getNumChildren() != 0) {
                 TreeElement v = findDepthFirst(e, name);
-                if (v != null) return v;
+                if (v != null) {
+                    return v;
+                }
             }
         }
         return null;

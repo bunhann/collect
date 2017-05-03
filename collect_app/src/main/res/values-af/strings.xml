@@ -24,7 +24,6 @@
   <string name="capture_video">Neem video</string>
   <string name="change_language">Verander Taal</string>
   <string name="change_password">ODK Wagwoord</string>
-  <string name="change_protocol_settings_default">Platform Verstellings</string>
   <string name="change_username">ODK Gebruikersnaam</string>
   <string name="clearanswer_confirm">Verwyer die antwoord op \"%s\"?</string>
   <string name="clear_answer">Verwyder antwoord</string>
@@ -161,7 +160,6 @@
   <string name="success">Sukses</string>
   <string name="no_forms_uploaded">Jammer, geen vorm is opgelaai nie.</string>
   <string name="upload_results">Oplaai Resultate</string>
-  <string name="xform_parse_error">XForm verwerkingsfout. %1$s vermis element %2$s</string>
   <string name="choose_sound">Kies Klank</string>
   <string name="choose_video">Kies Video</string>
   <string name="choose_image">Kies Prentjie</string>
@@ -211,7 +209,6 @@
   <string name="admin_preferences">Admin Verstellings</string>
   <string name="admin_access_settings">Raak hier vir admin toegang na Verstellings</string>
   <string name="user_access_form_entry">Gebruiker kan Vorm Invulling items bykom:</string>
-  <string name="admin_advanced_settings">Gevorderde Verstellings (soos aangeraai):</string>
   <string name="save_mid">Stoor Vorm</string>
   <string name="enter_new_password">Voer nuwe wagwoord in</string>
   <string name="verify_new_password">Voer weer nuwe wagwoord in</string>
@@ -240,12 +237,6 @@
   <string name="swipe_instructions">U is aan die begin van %s. Swipe die skerm soos hieronder gewys om vorentoe en agtertoe te gaan.</string>
   <string name="buttons_instructions">U is aan die begin van %s. Raak die pyl-knoppies hieronder om vorentoe en agtertoe te gaan.</string>
   <string name="swipe_buttons_instructions">U is aan die begin van %s. Swipe die skerm soos hieronder gewys, of raak die pyl-knoppies om vorentoe en agtertoe te gaan.</string>
-  <string name="form_processing_logic">Vorm-verwerkingslogika</string>
-  <string name="form_processing_logic_recommended">Aanbeveel (default)</string>
-  <string name="form_processing_logic_0">Januarie 2015 (vinnigste)</string>
-  <string name="form_processing_logic_1">Januarie 2015 (veiligste)</string>
-  <string name="form_processing_logic_2">Middel 2014 (stadig)</string>
-  <string name="form_processing_logic_3">Vroeg 2014 (vinnig)</string>
   <string name="launch_printer">Begin druk</string>
   <string name="no_printer">Die aangevraagde drukker is nie geïnstalleer nie. Installeer asseblief die drukker .</string>
   <string name="constraint_behavior">Constraint proseseringsgedrag</string>

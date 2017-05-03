@@ -16,6 +16,7 @@
  *
  * @author Jon Nordling (jonnordling@gmail.com)
  */
+
 package org.odk.collect.android.widgets;
 
 import android.app.Activity;
@@ -46,6 +47,8 @@ import org.odk.collect.android.preferences.PreferenceKeys;
 import org.odk.collect.android.utilities.PlayServicesUtil;
 
 import java.util.ArrayList;
+
+import timber.log.Timber;
 
 /**
  * GeoShapeWidget is the widget that allows the user to get Collect multiple GPS points.
@@ -185,7 +188,7 @@ public class GeoShapeWidget extends QuestionWidget implements IBinaryWidget {
                 String[] sa = s.split(";");
                 for (int i = 0; i < sa.length; i++) {
                     String[] sp = sa[i].trim().split(" ");
-                    double gp[] = new double[4];
+                    double[] gp = new double[4];
                     gp[0] = Double.valueOf(sp[0]).doubleValue();
                     gp[1] = Double.valueOf(sp[1]).doubleValue();
                     gp[2] = Double.valueOf(sp[2]).doubleValue();
@@ -195,7 +198,7 @@ public class GeoShapeWidget extends QuestionWidget implements IBinaryWidget {
                 GeoShape shape = new GeoShape(list);
                 return new StringData(s);
             } catch (NumberFormatException e) {
-                // TODO Auto-generated catch block
+                Timber.e(e);
                 return null;
             }
         }
@@ -206,7 +209,7 @@ public class GeoShapeWidget extends QuestionWidget implements IBinaryWidget {
         // TODO Auto-generated method stub
         mStringAnswer.setText(null);
         mAnswerDisplay.setText(null);
-
+        updateButtonLabelsAndVisibility(false);
     }
 
     @Override
@@ -220,8 +223,9 @@ public class GeoShapeWidget extends QuestionWidget implements IBinaryWidget {
 
     @Override
     public void setOnLongClickListener(OnLongClickListener l) {
-        // TODO Auto-generated method stub
-
+        createShapeButton.setOnLongClickListener(l);
+        mStringAnswer.setOnLongClickListener(l);
+        mAnswerDisplay.setOnLongClickListener(l);
     }
 
 }

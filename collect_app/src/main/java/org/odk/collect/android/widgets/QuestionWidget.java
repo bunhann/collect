@@ -23,7 +23,6 @@ import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.text.method.LinkMovementMethod;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -36,8 +35,6 @@ import android.widget.TextView;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.form.api.FormEntryPrompt;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDateTime;
 import org.odk.collect.android.application.Collect;
 import org.odk.collect.android.exception.JavaRosaException;
 import org.odk.collect.android.listeners.AudioPlayListener;
@@ -48,10 +45,12 @@ import org.odk.collect.android.views.MediaLayout;
 import java.util.ArrayList;
 import java.util.List;
 
+import timber.log.Timber;
+
 public abstract class QuestionWidget extends RelativeLayout implements AudioPlayListener {
 
     @SuppressWarnings("unused")
-    private final static String t = "QuestionWidget";
+    private static final String t = "QuestionWidget";
     private static int idGenerator = 1211322;
 
     /**
@@ -63,11 +62,11 @@ public abstract class QuestionWidget extends RelativeLayout implements AudioPlay
     }
 
     protected FormEntryPrompt mPrompt;
+    protected MediaLayout mQuestionMediaLayout;
 
     protected final int mQuestionFontsize;
     protected final int mAnswerFontsize;
 
-    private MediaLayout mQuestionMediaLayout;
     private TextView mHelpTextView;
 
     protected MediaPlayer mPlayer;
@@ -91,8 +90,8 @@ public abstract class QuestionWidget extends RelativeLayout implements AudioPlay
         mPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
-                Log.e(t, String.format("Error occured in MediaPlayer. what = %1$d, extra = %2$d",
-                        what, extra));
+                Timber.e("Error occured in MediaPlayer. what = %d, extra = %d",
+                        what, extra);
                 return false;
             }
         });
@@ -148,6 +147,7 @@ public abstract class QuestionWidget extends RelativeLayout implements AudioPlay
             try {
                 mPlayColor = Color.parseColor(playColorString);
             } catch (IllegalArgumentException e) {
+                Timber.e(e, "Argument %s is incorrect", playColorString);
             }
         }
         questionMediaLayout.setPlayTextColor(mPlayColor);
@@ -158,6 +158,7 @@ public abstract class QuestionWidget extends RelativeLayout implements AudioPlay
             try {
                 mPlayBackgroundColor = Color.parseColor(playBackgroundColorString);
             } catch (IllegalArgumentException e) {
+                Timber.e(e, "Argument %s is incorrect", playBackgroundColorString);
             }
         }
         questionMediaLayout.setPlayTextBackgroundColor(mPlayBackgroundColor);
@@ -254,7 +255,7 @@ public abstract class QuestionWidget extends RelativeLayout implements AudioPlay
      */
     protected void addQuestionMediaLayout(View v) {
         if (v == null) {
-            Log.e(t, "cannot add a null view as questionMediaLayout");
+            Timber.e("cannot add a null view as questionMediaLayout");
             return;
         }
         // default for questionmedialayout
@@ -273,7 +274,7 @@ public abstract class QuestionWidget extends RelativeLayout implements AudioPlay
      */
     protected void addHelpTextView(View v) {
         if (v == null) {
-            Log.e(t, "cannot add a null view as helpTextView");
+            Timber.e("cannot add a null view as helpTextView");
             return;
         }
 
@@ -314,7 +315,7 @@ public abstract class QuestionWidget extends RelativeLayout implements AudioPlay
      */
     protected void addAnswerView(View v) {
         if (v == null) {
-            Log.e(t, "cannot add a null view as an answerView");
+            Timber.e("cannot add a null view as an answerView");
             return;
         }
         // default place to add answer
@@ -376,19 +377,6 @@ public abstract class QuestionWidget extends RelativeLayout implements AudioPlay
         }
     }
 
-    // Skip over a "daylight savings gap". This is needed on the day and time of a daylight savings
-    // transition because that date/time doesn't exist.
-    // Today clocks are almost always set one hour back or ahead.
-    // Throughout history there have been several variations, like half adjustments (30 minutes) or
-    // double adjustment (two hours). Adjustments of 20 and 40 minutes have also been used.
-    // https://www.timeanddate.com/time/dst/
-    protected LocalDateTime skipDaylightSavingGapIfExists(LocalDateTime ldt) {
-        while (DateTimeZone.getDefault().isLocalDateTimeGap(ldt)) {
-            ldt = ldt.plusMinutes(1);
-        }
-        return ldt;
-    }
-
     /**
      * It's needed only for external choices. Everything works well and
      * out of the box when we use internal choices instead
@@ -399,13 +387,14 @@ public abstract class QuestionWidget extends RelativeLayout implements AudioPlay
             try {
                 FormIndex startFormIndex = formController.getQuestionPrompt().getIndex();
                 formController.stepToNextScreenEvent();
-                while (formController.currentCaptionPromptIsQuestion() &&
-                        formController.getQuestionPrompt().getFormElement().getAdditionalAttribute(null, "query") != null) {
+                while (formController.currentCaptionPromptIsQuestion()
+                        && formController.getQuestionPrompt().getFormElement().getAdditionalAttribute(null, "query") != null) {
                     formController.saveAnswer(formController.getQuestionPrompt().getIndex(), null);
                     formController.stepToNextScreenEvent();
                 }
                 formController.jumpToIndex(startFormIndex);
             } catch (JavaRosaException e) {
+                Timber.e(e);
             }
         }
     }

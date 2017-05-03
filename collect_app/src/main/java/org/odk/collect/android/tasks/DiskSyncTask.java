@@ -19,7 +19,6 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import org.odk.collect.android.R;
 import org.odk.collect.android.application.Collect;
@@ -27,6 +26,7 @@ import org.odk.collect.android.dao.FormsDao;
 import org.odk.collect.android.listeners.DiskSyncListener;
 import org.odk.collect.android.provider.FormsProviderAPI.FormsColumns;
 import org.odk.collect.android.utilities.FileUtils;
+import org.odk.collect.android.utilities.UrlUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -35,6 +35,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import timber.log.Timber;
+
 /**
  * Background task for adding to the forms content provider, any forms that have been added to the
  * sdcard manually. Returns immediately if it detects an error.
@@ -42,7 +44,6 @@ import java.util.List;
  * @author Carl Hartung (carlhartung@gmail.com)
  */
 public class DiskSyncTask extends AsyncTask<Void, String, String> {
-    private final static String t = "DiskSyncTask";
 
     private static int counter = 0;
 
@@ -68,7 +69,7 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
     protected String doInBackground(Void... params) {
         mFormsDao = new FormsDao();
         instance = ++counter; // roughly track the scan # we're on... logging use only
-        Log.i(t, "[" + instance + "] doInBackground begins!");
+        Timber.i("[%d] doInBackground begins!", instance);
         
         List<String> idsToDelete = new ArrayList<>();
 
@@ -79,7 +80,7 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
             File formDir = new File(Collect.FORMS_PATH);
             if (formDir.exists() && formDir.isDirectory()) {
                 // Get all the files in the /odk/foms directory
-                List<File> xFormsToAdd = new LinkedList<File>();
+                List<File> formsToAdd = new LinkedList<File>();
 
                 // Step 1: assemble the candidate form files
                 //         discard files beginning with "."
@@ -91,9 +92,9 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
                         if (!addMe.getName().startsWith(".")
                                 && (addMe.getName().endsWith(".xml") || addMe.getName().endsWith(
                                 ".xhtml"))) {
-                            xFormsToAdd.add(addMe);
+                            formsToAdd.add(addMe);
                         } else {
-                            Log.i(t, "[" + instance + "] Ignoring: " + addMe.getAbsolutePath());
+                            Timber.i("[%d] Ignoring: %s", instance, addMe.getAbsolutePath());
                         }
                     }
                 }
@@ -102,55 +103,55 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
                 // parse and update; this is quick, as we only calculate the md5
                 // and see if it has changed.
                 List<UriFile> uriToUpdate = new ArrayList<UriFile>();
-                Cursor mCursor = null;
+                Cursor cursor = null;
                 // open the cursor within a try-catch block so it can always be closed.
                 try {
-                    mCursor = mFormsDao.getFormsCursor();
-                    if (mCursor == null) {
-                        Log.e(t, "[" + instance + "] Forms Content Provider returned NULL");
+                    cursor = mFormsDao.getFormsCursor();
+                    if (cursor == null) {
+                        Timber.e("[%d] Forms Content Provider returned NULL", instance);
                         errors.append(
                                 "Internal Error: Unable to access Forms content provider").append(
                                 "\r\n");
                         return errors.toString();
                     }
 
-                    mCursor.moveToPosition(-1);
+                    cursor.moveToPosition(-1);
 
-                    while (mCursor.moveToNext()) {
+                    while (cursor.moveToNext()) {
                         // For each element in the provider, see if the file already exists
                         String sqlFilename =
-                                mCursor.getString(
-                                        mCursor.getColumnIndex(FormsColumns.FORM_FILE_PATH));
-                        String md5 = mCursor.getString(
-                                mCursor.getColumnIndex(FormsColumns.MD5_HASH));
+                                cursor.getString(
+                                        cursor.getColumnIndex(FormsColumns.FORM_FILE_PATH));
+                        String md5 = cursor.getString(
+                                cursor.getColumnIndex(FormsColumns.MD5_HASH));
                         File sqlFile = new File(sqlFilename);
                         if (sqlFile.exists()) {
                             // remove it from the list of forms (we only want forms
                             // we haven't added at the end)
-                            xFormsToAdd.remove(sqlFile);
+                            formsToAdd.remove(sqlFile);
                             String md5Computed = FileUtils.getMd5Hash(sqlFile);
                             if (md5Computed == null || md5 == null || !md5Computed.equals(md5)) {
                                 // Probably someone overwrite the file on the sdcard
                                 // So re-parse it and update it's information
-                                String id = mCursor.getString(
-                                        mCursor.getColumnIndex(FormsColumns._ID));
+                                String id = cursor.getString(
+                                        cursor.getColumnIndex(FormsColumns._ID));
                                 Uri updateUri = Uri.withAppendedPath(FormsColumns.CONTENT_URI, id);
                                 uriToUpdate.add(new UriFile(updateUri, sqlFile));
                             }
                         } else {
-                           //File not found in sdcard but file path found in database
+                            //File not found in sdcard but file path found in database
                             //probably because the file has been deleted or filename was changed in sdcard
                             //Add the ID to list so that they could be deleted all together
 
-                            String id = mCursor.getString(
-                                    mCursor.getColumnIndex(FormsColumns._ID));
+                            String id = cursor.getString(
+                                    cursor.getColumnIndex(FormsColumns._ID));
 
                             idsToDelete.add(id);
                         }
                     }
                 } finally {
-                    if (mCursor != null) {
-                        mCursor.close();
+                    if (cursor != null) {
+                        cursor.close();
                     }
                 }
                 
@@ -182,23 +183,23 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
                     int count =
                             Collect.getInstance().getContentResolver()
                                     .update(updateUri, values, null, null);
-                    Log.i(t, "[" + instance + "] " + count + " records successfully updated");
+                    Timber.i("[%d] %d records successfully updated", instance, count);
                 }
                 uriToUpdate.clear();
 
                 // Step 4: go through the newly-discovered files in xFormsToAdd and add them.
                 // This is slow because buildContentValues(...) is slow.
                 //
-                Collections.shuffle(xFormsToAdd); // Big win if multiple DiskSyncTasks running
-                while (!xFormsToAdd.isEmpty()) {
-                    File formDefFile = xFormsToAdd.remove(0);
+                Collections.shuffle(formsToAdd); // Big win if multiple DiskSyncTasks running
+                while (!formsToAdd.isEmpty()) {
+                    File formDefFile = formsToAdd.remove(0);
 
                     // Since parsing is so slow, if there are multiple tasks,
                     // they may have already updated the database.
                     // Skip this file if that is the case.
                     if (isAlreadyDefined(formDefFile)) {
-                        Log.i(t, "[" + instance + "] skipping -- definition already recorded: "
-                                + formDefFile.getAbsolutePath());
+                        Timber.i("[%d] skipping -- definition already recorded: %s",
+                                instance, formDefFile.getAbsolutePath());
                         continue;
                     }
 
@@ -222,7 +223,7 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
                         // DiskSync scanners are active.
                         mFormsDao.saveForm(values);
                     } catch (SQLException e) {
-                        Log.i(t, "[" + instance + "] " + e.toString());
+                        Timber.i("[%d] %s", instance, e.toString());
                     }
                 }
             }
@@ -233,7 +234,7 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
             }
             return statusMessage;
         } finally {
-            Log.i(t, "[" + instance + "] doInBackground ends!");
+            Timber.i("[%d] doInBackground ends!", instance);
         }
     }
 
@@ -301,7 +302,13 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
             updateValues.put(FormsColumns.JR_VERSION, version);
         }
         if (submission != null) {
-            updateValues.put(FormsColumns.SUBMISSION_URI, submission);
+            if (UrlUtils.isValidUrl(submission)) {
+                updateValues.put(FormsColumns.SUBMISSION_URI, submission);
+            } else {
+                throw new IllegalArgumentException(
+                        Collect.getInstance().getString(R.string.xform_parse_error,
+                                formDefFile.getName(), "submission url"));
+            }
         }
         if (base64RsaPublicKey != null) {
             updateValues.put(FormsColumns.BASE64_RSA_PUBLIC_KEY, base64RsaPublicKey);
@@ -325,5 +332,4 @@ public class DiskSyncTask extends AsyncTask<Void, String, String> {
             mListener.syncComplete(result);
         }
     }
-
 }

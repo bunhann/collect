@@ -24,7 +24,6 @@
   <string name="capture_video">سجل فيديو</string>
   <string name="change_language">تغيير اللغة</string>
   <string name="change_password">ODK كلمة المرور</string>
-  <string name="change_protocol_settings_default">اعدادات البرنامج</string>
   <string name="change_username">إسم المستخدم</string>
   <string name="clearanswer_confirm">حذف الإجابة ل \"%s\"؟</string>
   <string name="clear_answer">حذف الإجابة</string>
@@ -161,7 +160,6 @@
   <string name="success">نجاح</string>
   <string name="no_forms_uploaded">عذرا، لا يوجد استمارة للتحميل.</string>
   <string name="upload_results">تحميل النتائج</string>
-  <string name="xform_parse_error">خطأ في تحليل الاستمارة. %1$s عنصر مفقود %2$s</string>
   <string name="choose_sound">إختر تسجيل صوتي</string>
   <string name="choose_video">إختر فيديو</string>
   <string name="choose_image">إختر صورة</string>
@@ -211,7 +209,6 @@
   <string name="admin_preferences">إعدادات المدير</string>
   <string name="admin_access_settings">انقر للوصول الى اعدادات المدير</string>
   <string name="user_access_form_entry">يمكن للمستخدم الوصول الى عناصر تعبئة الاستمارة:</string>
-  <string name="admin_advanced_settings">اعدادات متقدمة </string>
   <string name="save_mid">حفظ الاستمارة</string>
   <string name="enter_new_password">أدخل كلمة مرور جديدة</string>
   <string name="verify_new_password">أعد إدخال كلمة المرور الجديدة</string>
@@ -240,12 +237,6 @@
   <string name="swipe_instructions">انت في بداية %s. اسحب الشاشىة كما مبين في الاسفل للذهاب الى الخلف او للأمام.</string>
   <string name="buttons_instructions">انت في بداية %s. اضغط على ازرار السهم للذهاب للخلف او للأمام.</string>
   <string name="swipe_buttons_instructions">كنت في بداية %s. اسحب الشاشة كما هو مبين في الاسفل او اضغط ازرار السهم للذهاب للخلف او للأمام.</string>
-  <string name="form_processing_logic">منطق تجهيز الاستمارة</string>
-  <string name="form_processing_logic_recommended">التوصيات (الافتراضية)</string>
-  <string name="form_processing_logic_0">كانون الثاني 2015 (الاسرع)</string>
-  <string name="form_processing_logic_1">كانون الثاني 2015 (الاكثر امانا)</string>
-  <string name="form_processing_logic_2">منتصف 2014 (بطيء)</string>
-  <string name="form_processing_logic_3">مبكرا 2014 (سريع)</string>
   <string name="launch_printer">البدء بالطباعة</string>
   <string name="no_printer">لم يتم تثبيت الطابعة المختارة. يرجى تثبيتها اولا.</string>
   <string name="constraint_behavior">معالجة القيود جارية</string>
@@ -303,8 +294,6 @@
   <string name="google_set_account">لقد قمت باختيار صفحات الجوجل كخادم لك، أرجو اختيار حساب الجوجل  المتوافق عن طريق الاعدادت العامة قبل الاستمرار</string>
   <string name="invalid_oauth">الرمز غير صالح</string>
   <string name="google_repeat_error">التكرارات غير مدعومة من قبل صفحات الجوجل بهذا الوقت</string>
-  <string name="google_audio_error">الملفات الصوتية غير مدعومة من قبل صفحات الجوجل بهذا الوقت</string>
-  <string name="google_video_error">ملفات الفيديو غير مدعومة من قبل صفحات الجوجل بهذا الوقت</string>
   <string name="odk_auth_auth_fail">فشل ارسال مصادقة المعلومات, رجاءا تأكد من أن جميع الاعدادات صحيحة</string>
   <string name="odk_auto_note">ارسال الاشعارات تلقائيا</string>
   <string name="notification_error">خطأ في عرض اشعار النص</string>

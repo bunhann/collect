@@ -54,12 +54,6 @@ public class GooglePreferencesFragment extends PreferenceFragment {
                 });
         mSelectedGoogleAccountPreference.setSummary(mSelectedGoogleAccountPreference.getValue());
 
-        boolean googleAccountAvailable = adminPreferences.getBoolean(
-                AdminKeys.KEY_CHANGE_GOOGLE_ACCOUNT, true);
-        if (!(googleAccountAvailable || adminMode)) {
-            googlePreferences.removePreference(mSelectedGoogleAccountPreference);
-        }
-
         mGoogleSheetsUrlPreference = (EditTextPreference) findPreference(
                 PreferenceKeys.KEY_GOOGLE_SHEETS_URL);
         mGoogleSheetsUrlPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
@@ -87,8 +81,8 @@ public class GooglePreferencesFragment extends PreferenceFragment {
 
         String currentGoogleSheetsURL = mGoogleSheetsUrlPreference.getText();
         if (currentGoogleSheetsURL.length() > 0) {
-            mGoogleSheetsUrlPreference.setSummary(currentGoogleSheetsURL + "\n\n" +
-                    getString(R.string.google_sheets_url_hint));
+            mGoogleSheetsUrlPreference.setSummary(currentGoogleSheetsURL + "\n\n"
+                    + getString(R.string.google_sheets_url_hint));
         }
 
         mGoogleSheetsUrlPreference.getEditText().setFilters(new InputFilter[]{
