@@ -85,7 +85,7 @@ public class InstanceProvider extends ContentProvider {
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            int initialVersion = oldVersion;
+            final int initialVersion = oldVersion;
             if (oldVersion == 1) {
                 db.execSQL("ALTER TABLE " + INSTANCES_TABLE_NAME + " ADD COLUMN "
                         + InstanceColumns.CAN_EDIT_WHEN_COMPLETE + " text;");
@@ -116,22 +116,22 @@ public class InstanceProvider extends ContentProvider {
         }
     }
 
-    private DatabaseHelper mDbHelper;
+    private DatabaseHelper databaseHelper;
 
     private DatabaseHelper getDbHelper() {
         // wrapper to test and reset/set the dbHelper based upon the attachment state of the device.
         try {
             Collect.createODKDirs();
         } catch (RuntimeException e) {
-            mDbHelper = null;
+            databaseHelper = null;
             return null;
         }
 
-        if (mDbHelper != null) {
-            return mDbHelper;
+        if (databaseHelper != null) {
+            return databaseHelper;
         }
-        mDbHelper = new DatabaseHelper(DATABASE_NAME);
-        return mDbHelper;
+        databaseHelper = new DatabaseHelper(DATABASE_NAME);
+        return databaseHelper;
     }
 
     @Override
